@@ -76,6 +76,7 @@ func init() {
 		cleanBrandingThemesCmd,
 		cleanDirectoryAttributesCmd,
 		cleanPasswordPoliciesCmd,
+		cleanKeysCmd,
 	)
 
 	// Add config flags
