@@ -27,10 +27,12 @@ type CleanEnvironmentPlatformKeysConfig struct {
 func (c *CleanEnvironmentPlatformKeysConfig) Clean(ctx context.Context) error {
 	l := logger.Get()
 
-	l.Debug().Msgf(`Cleaning bootstrap keys for environment ID "%s"..`, c.Environment.EnvironmentID)
+	debugModule := "Keys"
+
+	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, debugModule, c.Environment.EnvironmentID)
 
 	if len(c.BootstrapIssuerDNPrefixes) == 0 {
-		l.Warn().Msgf("No bootstrap key names configured - skipping")
+		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", debugModule)
 		return nil
 	}
 
@@ -51,15 +53,15 @@ func (c *CleanEnvironmentPlatformKeysConfig) Clean(ctx context.Context) error {
 	}
 
 	if response == nil {
-		return fmt.Errorf("No keys found - the API responded with no data")
+		return fmt.Errorf("[%s] No configuration items found - the API responded with no data", debugModule)
 	}
 
 	if embedded, ok := response.GetEmbeddedOk(); ok && embedded.HasKeys() {
 
-		l.Debug().Msg("Keys found, looping..")
+		l.Debug().Msgf("[%s] Configuration items found, looping..", debugModule)
 		for _, key := range embedded.GetKeys() {
 
-			l.Debug().Msgf(`Looping bootstrapped key names for "%s"..`, key.GetName())
+			l.Debug().Msgf(`[%s] Looping names for "%s"..`, debugModule, key.GetName())
 			for _, defaultIssuerPrefix := range c.BootstrapIssuerDNPrefixes {
 
 				matchesPrefix := false
@@ -70,10 +72,10 @@ func (c *CleanEnvironmentPlatformKeysConfig) Clean(ctx context.Context) error {
 				}
 
 				if matchesPrefix {
-					l.Debug().Msgf(`Found "%s" (%s) key`, key.GetName(), key.GetUsageType())
+					l.Debug().Msgf(`[%s] Found "%s" (%s) key`, debugModule, key.GetName(), key.GetUsageType())
 
 					if key.GetDefault() {
-						l.Warn().Msgf(`The "%s" (%s) key is set as the default key - this will not be deleted`, key.GetName(), key.GetUsageType())
+						l.Warn().Msgf(`[%s] "%s" (%s) is set as the environment default - this configuration will not be deleted`, debugModule, key.GetName(), key.GetUsageType())
 
 						break
 					}
@@ -94,19 +96,19 @@ func (c *CleanEnvironmentPlatformKeysConfig) Clean(ctx context.Context) error {
 						if err != nil {
 							return err
 						}
-						l.Info().Msgf(`Key "%s" (%s) deleted`, key.GetName(), key.GetUsageType())
+						l.Info().Msgf(`[%s] "%s" (%s) deleted`, debugModule, key.GetName(), key.GetUsageType())
 					} else {
-						l.Warn().Msgf(`Dry run: key "%s" (%s) with ID "%s" would be deleted`, key.GetName(), key.GetUsageType(), key.GetId())
+						l.Warn().Msgf(`[%s] Dry run: key "%s" (%s) with ID "%s" would be deleted`, debugModule, key.GetName(), key.GetUsageType(), key.GetId())
 					}
 
 					break
 				}
 			}
 		}
-		l.Debug().Msg("Keys done")
+		l.Debug().Msgf("[%s] Done", debugModule)
 
 	} else {
-		l.Debug().Msg("No Keys found in the target environment")
+		l.Debug().Msgf("[%s] No configuration items found in the target environment", debugModule)
 	}
 
 	return nil

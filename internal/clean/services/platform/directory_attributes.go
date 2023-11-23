@@ -39,10 +39,12 @@ type CleanEnvironmentPlatformDirectoryAttributeConfig struct {
 func (c *CleanEnvironmentPlatformDirectoryAttributeConfig) Clean(ctx context.Context) error {
 	l := logger.Get()
 
-	l.Debug().Msgf(`Cleaning bootstrap directory attributes for environment ID "%s"..`, c.Environment.EnvironmentID)
+	debugModule := "Directory Attributes"
+
+	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, debugModule, c.Environment.EnvironmentID)
 
 	if len(c.BootstrapAttributeNames) == 0 {
-		l.Warn().Msgf("No bootstrap directory attribute names configured - skipping")
+		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", debugModule)
 		return nil
 	}
 
@@ -53,17 +55,17 @@ func (c *CleanEnvironmentPlatformDirectoryAttributeConfig) Clean(ctx context.Con
 		schemaName = "User"
 	}
 
-	l.Debug().Msgf(`Fetching ID for schema "%s"..`, schemaName)
+	l.Debug().Msgf(`[%s] Fetching ID for schema "%s"..`, debugModule, schemaName)
 	schema, err := fetchDefaultSchema(ctx, c.Environment.Client, c.Environment.EnvironmentID, schemaName)
 	if err != nil {
 		return err
 	}
 
 	if schema == nil {
-		return fmt.Errorf("No schema found - the API responded with no data")
+		return fmt.Errorf("[%s] No schema found - the API responded with no data", debugModule)
 	}
 
-	l.Debug().Msgf(`Schema ID found as "%s"`, schema.GetId())
+	l.Debug().Msgf(`[%s] Schema ID found as "%s"`, debugModule, schema.GetId())
 
 	var response *management.EntityArray
 	err = sdk.ParseResponse(
@@ -82,24 +84,24 @@ func (c *CleanEnvironmentPlatformDirectoryAttributeConfig) Clean(ctx context.Con
 	}
 
 	if response == nil {
-		return fmt.Errorf("No directory attributes found - the API responded with no data")
+		return fmt.Errorf("[%s] No configuration items found - the API responded with no data", debugModule)
 	}
 
 	if embedded, ok := response.GetEmbeddedOk(); ok && embedded.HasAttributes() {
 
-		l.Debug().Msg("Directory attributes found, looping..")
+		l.Debug().Msgf("[%s] Configuration items found, looping..", debugModule)
 		for _, attributeInstance := range embedded.GetAttributes() {
 
 			attribute := attributeInstance.SchemaAttribute
 
-			l.Debug().Msgf(`Looping bootstrapped directory attribute names for "%s"..`, attribute.GetName())
+			l.Debug().Msgf(`[%s] Looping names for "%s"..`, debugModule, attribute.GetName())
 			for _, bootstrapAttributeName := range c.BootstrapAttributeNames {
 
 				if attribute.GetName() == bootstrapAttributeName {
-					l.Debug().Msgf(`Found "%s" directory attribute`, bootstrapAttributeName)
+					l.Debug().Msgf(`[%s] Found "%s"`, debugModule, bootstrapAttributeName)
 
 					if !attribute.GetEnabled() {
-						l.Info().Msgf(`Directory attribute "%s" already disabled - no action taken`, bootstrapAttributeName)
+						l.Info().Msgf(`[%s] "%s" is already disabled - no action taken`, debugModule, bootstrapAttributeName)
 
 						break
 					}
@@ -122,19 +124,19 @@ func (c *CleanEnvironmentPlatformDirectoryAttributeConfig) Clean(ctx context.Con
 						if err != nil {
 							return err
 						}
-						l.Info().Msgf(`Directory attribute "%s" disabled`, bootstrapAttributeName)
+						l.Info().Msgf(`[%s] "%s" disabled`, debugModule, attribute.GetName())
 					} else {
-						l.Warn().Msgf(`Dry run: directory attribute "%s" with ID "%s" would be disabled`, bootstrapAttributeName, attribute.GetId())
+						l.Warn().Msgf(`[%s] Dry run: "%s" with ID "%s" would be disabled`, debugModule, attribute.GetName(), attribute.GetId())
 					}
 
 					break
 				}
 			}
 		}
-		l.Debug().Msg("Directory attributes done")
+		l.Debug().Msgf("[%s] Done", debugModule)
 
 	} else {
-		l.Debug().Msg("No directory attributes found in the target environment")
+		l.Debug().Msgf("[%s] No configuration items found in the target environment", debugModule)
 	}
 
 	return nil

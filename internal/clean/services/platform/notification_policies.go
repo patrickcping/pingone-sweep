@@ -25,10 +25,12 @@ type CleanEnvironmentPlatformNotificationPoliciesConfig struct {
 func (c *CleanEnvironmentPlatformNotificationPoliciesConfig) Clean(ctx context.Context) error {
 	l := logger.Get()
 
-	l.Debug().Msgf(`Cleaning bootstrap notification policies for environment ID "%s"..`, c.Environment.EnvironmentID)
+	debugModule := "Password Policies"
+
+	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, debugModule, c.Environment.EnvironmentID)
 
 	if len(c.BootstrapNotificationPolicyNames) == 0 {
-		l.Warn().Msgf("No bootstrap notification policy names configured - skipping")
+		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", debugModule)
 		return nil
 	}
 
@@ -49,22 +51,22 @@ func (c *CleanEnvironmentPlatformNotificationPoliciesConfig) Clean(ctx context.C
 	}
 
 	if response == nil {
-		return fmt.Errorf("No notification policies found - the API responded with no data")
+		return fmt.Errorf("[%s] No configuration items found - the API responded with no data", debugModule)
 	}
 
 	if embedded, ok := response.GetEmbeddedOk(); ok && embedded.HasNotificationsPolicies() {
 
-		l.Debug().Msg("Notification policies found, looping..")
+		l.Debug().Msgf("[%s] Configuration items found, looping..", debugModule)
 		for _, policy := range embedded.GetNotificationsPolicies() {
 
-			l.Debug().Msgf(`Looping bootstrapped policy names for "%s"..`, policy.GetName())
+			l.Debug().Msgf(`[%s] Looping names for "%s"..`, debugModule, policy.GetName())
 			for _, defaultPolicyName := range c.BootstrapNotificationPolicyNames {
 
 				if policy.GetName() == defaultPolicyName {
-					l.Debug().Msgf(`Found "%s" notification policy`, defaultPolicyName)
+					l.Debug().Msgf(`[%s] Found "%s"`, debugModule, defaultPolicyName)
 
 					if policy.GetDefault() {
-						l.Warn().Msgf(`The "%s" notification policy is set as the default policy - this will not be deleted`, defaultPolicyName)
+						l.Warn().Msgf(`[%s] "%s" is set as the environment default - this configuration will not be deleted`, debugModule, policy.GetName())
 
 						break
 					}
@@ -85,18 +87,19 @@ func (c *CleanEnvironmentPlatformNotificationPoliciesConfig) Clean(ctx context.C
 						if err != nil {
 							return err
 						}
-						l.Info().Msgf(`Notification policy "%s" deleted`, defaultPolicyName)
+						l.Info().Msgf(`[%s] "%s" deleted`, debugModule, policy.GetName())
 					} else {
-						l.Warn().Msgf(`Dry run: notification policy "%s" with ID "%s" would be deleted`, defaultPolicyName, policy.GetId())
+						l.Warn().Msgf(`[%s] Dry run: "%s" with ID "%s" would be deleted`, debugModule, policy.GetName(), policy.GetId())
 					}
 
 					break
 				}
 			}
 		}
+		l.Debug().Msgf("[%s] Done", debugModule)
 
 	} else {
-		l.Debug().Msg("No Notification policies found in the target environment")
+		l.Debug().Msgf("[%s] No configuration items found in the target environment", debugModule)
 	}
 
 	return nil

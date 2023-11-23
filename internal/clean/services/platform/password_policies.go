@@ -27,10 +27,12 @@ type CleanEnvironmentPlatformPasswordPoliciesConfig struct {
 func (c *CleanEnvironmentPlatformPasswordPoliciesConfig) Clean(ctx context.Context) error {
 	l := logger.Get()
 
-	l.Debug().Msgf(`Cleaning bootstrap password policies for environment ID "%s"..`, c.Environment.EnvironmentID)
+	debugModule := "Password Policies"
+
+	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, debugModule, c.Environment.EnvironmentID)
 
 	if len(c.BootstrapPasswordPolicyNames) == 0 {
-		l.Warn().Msgf("No bootstrap password policy names configured - skipping")
+		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", debugModule)
 		return nil
 	}
 
@@ -51,22 +53,22 @@ func (c *CleanEnvironmentPlatformPasswordPoliciesConfig) Clean(ctx context.Conte
 	}
 
 	if response == nil {
-		return fmt.Errorf("No password policies found - the API responded with no data")
+		return fmt.Errorf("[%s] No configuration items found - the API responded with no data", debugModule)
 	}
 
 	if embedded, ok := response.GetEmbeddedOk(); ok && embedded.HasPasswordPolicies() {
 
-		l.Debug().Msg("Password policies found, looping..")
+		l.Debug().Msgf("[%s] Configuration items found, looping..", debugModule)
 		for _, policy := range embedded.GetPasswordPolicies() {
 
-			l.Debug().Msgf(`Looping bootstrapped policy names for "%s"..`, policy.GetName())
-			for _, defaultThemeName := range c.BootstrapPasswordPolicyNames {
+			l.Debug().Msgf(`[%s] Looping names for "%s"..`, debugModule, policy.GetName())
+			for _, defaultPolicyName := range c.BootstrapPasswordPolicyNames {
 
-				if policy.GetName() == defaultThemeName {
-					l.Debug().Msgf(`Found "%s" password policy`, defaultThemeName)
+				if policy.GetName() == defaultPolicyName {
+					l.Debug().Msgf(`[%s] Found "%s"`, debugModule, defaultPolicyName)
 
 					if policy.GetDefault() {
-						l.Warn().Msgf(`The "%s" password policy is set as the default policy - this will not be deleted`, defaultThemeName)
+						l.Warn().Msgf(`[%s] "%s" is set as the environment default - this configuration will not be deleted`, debugModule, policy.GetName())
 
 						break
 					}
@@ -87,19 +89,19 @@ func (c *CleanEnvironmentPlatformPasswordPoliciesConfig) Clean(ctx context.Conte
 						if err != nil {
 							return err
 						}
-						l.Info().Msgf(`Password policy "%s" deleted`, defaultThemeName)
+						l.Info().Msgf(`[%s] "%s" deleted`, debugModule, policy.GetName())
 					} else {
-						l.Warn().Msgf(`Dry run: password policy "%s" with ID "%s" would be deleted`, defaultThemeName, policy.GetId())
+						l.Warn().Msgf(`[%s] Dry run: "%s" with ID "%s" would be deleted`, debugModule, policy.GetName(), policy.GetId())
 					}
 
 					break
 				}
 			}
 		}
-		l.Debug().Msg("Password policies done")
+		l.Debug().Msgf("[%s] Done", debugModule)
 
 	} else {
-		l.Debug().Msg("No Password policies found in the target environment")
+		l.Debug().Msgf("[%s] No configuration items found in the target environment", debugModule)
 	}
 
 	return nil

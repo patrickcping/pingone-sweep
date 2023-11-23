@@ -29,10 +29,12 @@ type CleanEnvironmentPlatformDaVinciFormsConfig struct {
 func (c *CleanEnvironmentPlatformDaVinciFormsConfig) Clean(ctx context.Context) error {
 	l := logger.Get()
 
-	l.Debug().Msgf(`Cleaning bootstrap DaVinci forms for environment ID "%s"..`, c.Environment.EnvironmentID)
+	debugModule := "DaVinci Forms"
+
+	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, debugModule, c.Environment.EnvironmentID)
 
 	if len(c.BootstrapDaVinciFormNames) == 0 {
-		l.Warn().Msgf("No bootstrap DaVinci form names configured - skipping")
+		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", debugModule)
 		return nil
 	}
 
@@ -53,19 +55,19 @@ func (c *CleanEnvironmentPlatformDaVinciFormsConfig) Clean(ctx context.Context) 
 	}
 
 	if response == nil {
-		return fmt.Errorf("No DaVinci forms found - the API responded with no data")
+		return fmt.Errorf("[%s] No configuration items found - the API responded with no data", debugModule)
 	}
 
 	if embedded, ok := response.GetEmbeddedOk(); ok && embedded.HasForms() {
 
-		l.Debug().Msg("DaVinci forms found, looping..")
+		l.Debug().Msgf("[%s] Configuration items found, looping..", debugModule)
 		for _, form := range embedded.GetForms() {
 
-			l.Debug().Msgf(`Looping bootstrapped form names for "%s"..`, form.GetName())
+			l.Debug().Msgf(`[%s] Looping names for "%s"..`, debugModule, form.GetName())
 			for _, defaultFormName := range c.BootstrapDaVinciFormNames {
 
 				if form.GetName() == defaultFormName {
-					l.Debug().Msgf(`Found "%s" DaVinci form`, defaultFormName)
+					l.Debug().Msgf(`[%s] Found "%s"`, debugModule, defaultFormName)
 
 					if !c.Environment.DryRun {
 						err := sdk.ParseResponse(
@@ -83,19 +85,19 @@ func (c *CleanEnvironmentPlatformDaVinciFormsConfig) Clean(ctx context.Context) 
 						if err != nil {
 							return err
 						}
-						l.Info().Msgf(`DaVinci form "%s" deleted`, defaultFormName)
+						l.Info().Msgf(`[%s] "%s" deleted`, debugModule, form.GetName())
 					} else {
-						l.Warn().Msgf(`Dry run: DaVinci form "%s" with ID "%s" would be deleted`, defaultFormName, form.GetId())
+						l.Warn().Msgf(`[%s] Dry run: "%s" with ID "%s" would be deleted`, debugModule, form.GetName(), form.GetId())
 					}
 
 					break
 				}
 			}
 		}
-		l.Debug().Msg("DaVinci forms done")
+		l.Debug().Msgf("[%s] Done", debugModule)
 
 	} else {
-		l.Debug().Msg("No DaVinci forms found in the target environment")
+		l.Debug().Msgf("[%s] No configuration items found in the target environment", debugModule)
 	}
 
 	return nil

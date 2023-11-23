@@ -25,10 +25,12 @@ type CleanEnvironmentPlatformBrandingThemesConfig struct {
 func (c *CleanEnvironmentPlatformBrandingThemesConfig) Clean(ctx context.Context) error {
 	l := logger.Get()
 
-	l.Debug().Msgf(`Cleaning bootstrap branding themes for environment ID "%s"..`, c.Environment.EnvironmentID)
+	debugModule := "Branding Themes"
+
+	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, debugModule, c.Environment.EnvironmentID)
 
 	if len(c.BootstrapBrandingThemeNames) == 0 {
-		l.Warn().Msgf("No bootstrap branding theme names configured - skipping")
+		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", debugModule)
 		return nil
 	}
 
@@ -49,22 +51,22 @@ func (c *CleanEnvironmentPlatformBrandingThemesConfig) Clean(ctx context.Context
 	}
 
 	if response == nil {
-		return fmt.Errorf("No branding themes found - the API responded with no data")
+		return fmt.Errorf("[%s] No configuration items found - the API responded with no data", debugModule)
 	}
 
 	if embedded, ok := response.GetEmbeddedOk(); ok && embedded.HasThemes() {
 
-		l.Debug().Msg("Branding themes found, looping..")
+		l.Debug().Msgf("[%s] Configuration items found, looping..", debugModule)
 		for _, theme := range embedded.GetThemes() {
 
-			l.Debug().Msgf(`Looping bootstrapped theme names for "%s"..`, theme.Configuration.GetName())
+			l.Debug().Msgf(`[%s] Looping names for "%s"..`, debugModule, theme.Configuration.GetName())
 			for _, defaultThemeName := range c.BootstrapBrandingThemeNames {
 
 				if theme.Configuration.GetName() == defaultThemeName {
-					l.Debug().Msgf(`Found "%s" branding theme`, defaultThemeName)
+					l.Debug().Msgf(`[%s] Found "%s"`, debugModule, defaultThemeName)
 
 					if theme.GetDefault() {
-						l.Warn().Msgf(`The "%s" branding theme is set as the default theme - this will not be deleted`, defaultThemeName)
+						l.Warn().Msgf(`[%s] "%s" is set as the environment default - this configuration will not be deleted`, debugModule, theme.Configuration.GetName())
 
 						break
 					}
@@ -85,19 +87,19 @@ func (c *CleanEnvironmentPlatformBrandingThemesConfig) Clean(ctx context.Context
 						if err != nil {
 							return err
 						}
-						l.Info().Msgf(`Branding theme "%s" deleted`, defaultThemeName)
+						l.Info().Msgf(`[%s] "%s" deleted`, debugModule, theme.Configuration.GetName())
 					} else {
-						l.Warn().Msgf(`Dry run: branding theme "%s" with ID "%s" would be deleted`, defaultThemeName, theme.GetId())
+						l.Warn().Msgf(`[%s] Dry run: "%s" with ID "%s" would be deleted`, debugModule, theme.Configuration.GetName(), theme.GetId())
 					}
 
 					break
 				}
 			}
 		}
-		l.Debug().Msg("Branding themes done")
+		l.Debug().Msgf("[%s] Done", debugModule)
 
 	} else {
-		l.Debug().Msg("No Branding themes found in the target environment")
+		l.Debug().Msgf("[%s] No configuration items found in the target environment", debugModule)
 	}
 
 	return nil
