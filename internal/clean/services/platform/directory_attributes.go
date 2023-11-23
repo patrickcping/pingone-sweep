@@ -98,31 +98,33 @@ func (c *CleanEnvironmentPlatformDirectoryAttributeConfig) Clean(ctx context.Con
 				if attribute.GetName() == bootstrapAttributeName {
 					l.Debug().Msgf(`Found "%s" directory attribute`, bootstrapAttributeName)
 
-					if attribute.GetEnabled() {
-						attributeUpdate := management.NewSchemaAttributePatch()
-						attributeUpdate.SetEnabled(false)
-
-						if !c.Environment.DryRun {
-							err := sdk.ParseResponse(
-								ctx,
-
-								func() (any, *http.Response, error) {
-									return c.Environment.Client.SchemasApi.UpdateAttributePatch(ctx, c.Environment.EnvironmentID, schema.GetId(), attribute.GetId()).SchemaAttributePatch(*attributeUpdate).Execute()
-								},
-								"UpdateAttributePatch",
-								sdk.DefaultCreateReadRetryable,
-								nil,
-							)
-
-							if err != nil {
-								return err
-							}
-							l.Info().Msgf(`Directory attribute "%s" disabled`, bootstrapAttributeName)
-						} else {
-							l.Warn().Msgf(`Dry run: directory attribute "%s" with ID "%s" would be disabled`, bootstrapAttributeName, attribute.GetId())
-						}
-					} else {
+					if !attribute.GetEnabled() {
 						l.Info().Msgf(`Directory attribute "%s" already disabled - no action taken`, bootstrapAttributeName)
+
+						break
+					}
+
+					attributeUpdate := management.NewSchemaAttributePatch()
+					attributeUpdate.SetEnabled(false)
+
+					if !c.Environment.DryRun {
+						err := sdk.ParseResponse(
+							ctx,
+
+							func() (any, *http.Response, error) {
+								return c.Environment.Client.SchemasApi.UpdateAttributePatch(ctx, c.Environment.EnvironmentID, schema.GetId(), attribute.GetId()).SchemaAttributePatch(*attributeUpdate).Execute()
+							},
+							"UpdateAttributePatch",
+							sdk.DefaultCreateReadRetryable,
+							nil,
+						)
+
+						if err != nil {
+							return err
+						}
+						l.Info().Msgf(`Directory attribute "%s" disabled`, bootstrapAttributeName)
+					} else {
+						l.Warn().Msgf(`Dry run: directory attribute "%s" with ID "%s" would be disabled`, bootstrapAttributeName, attribute.GetId())
 					}
 
 					break

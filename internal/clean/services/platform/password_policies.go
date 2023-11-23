@@ -67,28 +67,29 @@ func (c *CleanEnvironmentPlatformPasswordPoliciesConfig) Clean(ctx context.Conte
 
 					if policy.GetDefault() {
 						l.Warn().Msgf(`The "%s" password policy is set as the default policy - this will not be deleted`, defaultThemeName)
-					} else {
 
-						if !c.Environment.DryRun {
-							err := sdk.ParseResponse(
-								ctx,
+						break
+					}
 
-								func() (any, *http.Response, error) {
-									r, err := c.Environment.Client.PasswordPoliciesApi.DeletePasswordPolicy(ctx, c.Environment.EnvironmentID, policy.GetId()).Execute()
-									return nil, r, err
-								},
-								"DeletePasswordPolicy",
-								sdk.DefaultCreateReadRetryable,
-								nil,
-							)
+					if !c.Environment.DryRun {
+						err := sdk.ParseResponse(
+							ctx,
 
-							if err != nil {
-								return err
-							}
-							l.Info().Msgf(`Password policy "%s" deleted`, defaultThemeName)
-						} else {
-							l.Warn().Msgf(`Dry run: password policy "%s" with ID "%s" would be deleted`, defaultThemeName, policy.GetId())
+							func() (any, *http.Response, error) {
+								r, err := c.Environment.Client.PasswordPoliciesApi.DeletePasswordPolicy(ctx, c.Environment.EnvironmentID, policy.GetId()).Execute()
+								return nil, r, err
+							},
+							"DeletePasswordPolicy",
+							sdk.DefaultCreateReadRetryable,
+							nil,
+						)
+
+						if err != nil {
+							return err
 						}
+						l.Info().Msgf(`Password policy "%s" deleted`, defaultThemeName)
+					} else {
+						l.Warn().Msgf(`Dry run: password policy "%s" with ID "%s" would be deleted`, defaultThemeName, policy.GetId())
 					}
 
 					break

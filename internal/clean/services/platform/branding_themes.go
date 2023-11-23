@@ -65,28 +65,29 @@ func (c *CleanEnvironmentPlatformBrandingThemesConfig) Clean(ctx context.Context
 
 					if theme.GetDefault() {
 						l.Warn().Msgf(`The "%s" branding theme is set as the default theme - this will not be deleted`, defaultThemeName)
-					} else {
 
-						if !c.Environment.DryRun {
-							err := sdk.ParseResponse(
-								ctx,
+						break
+					}
 
-								func() (any, *http.Response, error) {
-									r, err := c.Environment.Client.BrandingThemesApi.DeleteBrandingTheme(ctx, c.Environment.EnvironmentID, theme.GetId()).Execute()
-									return nil, r, err
-								},
-								"DeleteBrandingTheme",
-								sdk.DefaultCreateReadRetryable,
-								nil,
-							)
+					if !c.Environment.DryRun {
+						err := sdk.ParseResponse(
+							ctx,
 
-							if err != nil {
-								return err
-							}
-							l.Info().Msgf(`Branding theme "%s" deleted`, defaultThemeName)
-						} else {
-							l.Warn().Msgf(`Dry run: branding theme "%s" with ID "%s" would be deleted`, defaultThemeName, theme.GetId())
+							func() (any, *http.Response, error) {
+								r, err := c.Environment.Client.BrandingThemesApi.DeleteBrandingTheme(ctx, c.Environment.EnvironmentID, theme.GetId()).Execute()
+								return nil, r, err
+							},
+							"DeleteBrandingTheme",
+							sdk.DefaultCreateReadRetryable,
+							nil,
+						)
+
+						if err != nil {
+							return err
 						}
+						l.Info().Msgf(`Branding theme "%s" deleted`, defaultThemeName)
+					} else {
+						l.Warn().Msgf(`Dry run: branding theme "%s" with ID "%s" would be deleted`, defaultThemeName, theme.GetId())
 					}
 
 					break
