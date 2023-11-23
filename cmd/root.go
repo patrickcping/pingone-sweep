@@ -76,6 +76,7 @@ func init() {
 		cleanBrandingThemesCmd,
 		cleanDaVinciFormsCmd,
 		cleanDirectoryAttributesCmd,
+		cleanNotificationPoliciesCmd,
 		cleanPasswordPoliciesCmd,
 		cleanKeysCmd,
 	)
