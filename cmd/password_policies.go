@@ -26,7 +26,7 @@ var cleanPasswordPoliciesCmd = &cobra.Command{
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
-		l.Debug().Msgf("Clean Command called for branding themes.")
+		l.Debug().Msgf("Clean Command called for password policies.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
 		l.Debug().Msgf(`Password Policy names: "%s"`, strings.Join(passwordPolicyNames, `", "`))
 
