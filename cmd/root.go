@@ -74,6 +74,7 @@ func init() {
 	// General function commands
 	rootCmd.AddCommand(
 		cleanBrandingThemesCmd,
+		cleanDaVinciFormsCmd,
 		cleanDirectoryAttributesCmd,
 		cleanPasswordPoliciesCmd,
 		cleanKeysCmd,
