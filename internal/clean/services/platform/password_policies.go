@@ -96,6 +96,7 @@ func (c *CleanEnvironmentPlatformPasswordPoliciesConfig) Clean(ctx context.Conte
 				}
 			}
 		}
+		l.Debug().Msg("Password policies done")
 
 	} else {
 		l.Debug().Msg("No Password policies found in the target environment")

@@ -94,6 +94,7 @@ func (c *CleanEnvironmentPlatformBrandingThemesConfig) Clean(ctx context.Context
 				}
 			}
 		}
+		l.Debug().Msg("Branding themes done")
 
 	} else {
 		l.Debug().Msg("No Branding themes found in the target environment")

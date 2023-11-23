@@ -131,6 +131,7 @@ func (c *CleanEnvironmentPlatformDirectoryAttributeConfig) Clean(ctx context.Con
 				}
 			}
 		}
+		l.Debug().Msg("Directory attributes done")
 
 	} else {
 		l.Debug().Msg("No directory attributes found in the target environment")

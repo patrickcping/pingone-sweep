@@ -103,6 +103,7 @@ func (c *CleanEnvironmentPlatformKeysConfig) Clean(ctx context.Context) error {
 				}
 			}
 		}
+		l.Debug().Msg("Keys done")
 
 	} else {
 		l.Debug().Msg("No Keys found in the target environment")

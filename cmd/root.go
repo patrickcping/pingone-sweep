@@ -76,9 +76,9 @@ func init() {
 		cleanBrandingThemesCmd,
 		cleanDaVinciFormsCmd,
 		cleanDirectoryAttributesCmd,
+		cleanKeysCmd,
 		cleanNotificationPoliciesCmd,
 		cleanPasswordPoliciesCmd,
-		cleanKeysCmd,
 	)
 
 	// Add config flags

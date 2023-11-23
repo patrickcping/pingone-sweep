@@ -15,7 +15,7 @@ var (
 
 var cleanPasswordPoliciesCmd = &cobra.Command{
 	Use:   "password-policies",
-	Short: "Clean unwanted demo branding theme configuration",
+	Short: "Clean unwanted demo password policy configuration",
 	Long: `Clean away demo configuration and prepare an environment for production-ready configuration.
 
 	Examples:
