@@ -7,6 +7,7 @@ import (
 	"github.com/patrickcping/pingone-sweep/internal/clean/services/platform"
 	"github.com/patrickcping/pingone-sweep/internal/logger"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -27,6 +28,10 @@ var cleanDirectoryAttributesCmd = &cobra.Command{
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
+
+		dryRun := viper.GetBool("dry-run")
+		directoryAttributeNames := viper.GetStringSlice("pingone.services.platform.directory-schema.attribute-names")
+
 		l.Debug().Msgf("Clean Command called for directory attributes.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
 		l.Debug().Msgf(`Attribute names: "%s"`, strings.Join(directoryAttributeNames, `", "`))
@@ -39,8 +44,8 @@ var cleanDirectoryAttributesCmd = &cobra.Command{
 
 		cleanConfig := platform.CleanEnvironmentPlatformDirectoryAttributeConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: environmentID,
-				DryRun:        dryRun,
+				EnvironmentID: viper.GetString("pingone.target-environment-id"),
+				DryRun:        viper.GetBool("dry-run"),
 				Client:        apiClient.API,
 			},
 			BootstrapAttributeNames: directoryAttributeNames,
@@ -53,4 +58,5 @@ var cleanDirectoryAttributesCmd = &cobra.Command{
 
 func init() {
 	cleanDirectoryAttributesCmd.PersistentFlags().StringSliceVar(&directoryAttributeNames, "attribute-names", platform.BootstrapDirectoryAttributeNames, "The list of directory attribute names to search for to disable.")
+	viper.BindPFlag("pingone.services.platform.directory-schema.attribute-names", cleanDirectoryAttributesCmd.PersistentFlags().Lookup("attribute-names"))
 }

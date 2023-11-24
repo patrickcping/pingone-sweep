@@ -7,6 +7,7 @@ import (
 	"github.com/patrickcping/pingone-sweep/internal/clean/services/sso"
 	"github.com/patrickcping/pingone-sweep/internal/logger"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -26,6 +27,10 @@ var cleanAuthenticationPoliciesCmd = &cobra.Command{
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
+
+		dryRun := viper.GetBool("dry-run")
+		authenticationPolicyNames := viper.GetStringSlice("pingone.services.platform.authentication-policies.names")
+
 		l.Debug().Msgf("Clean Command called for sign-on (authentication) policies.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
 		l.Debug().Msgf(`sign-on (authentication) Policy names: "%s"`, strings.Join(authenticationPolicyNames, `", "`))
@@ -38,8 +43,8 @@ var cleanAuthenticationPoliciesCmd = &cobra.Command{
 
 		cleanConfig := sso.CleanEnvironmentAuthenticationPoliciesConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: environmentID,
-				DryRun:        dryRun,
+				EnvironmentID: viper.GetString("pingone.target-environment-id"),
+				DryRun:        viper.GetBool("dry-run"),
 				Client:        apiClient.API,
 			},
 			BootstrapAuthenticationPolicyNames: authenticationPolicyNames,
@@ -51,4 +56,5 @@ var cleanAuthenticationPoliciesCmd = &cobra.Command{
 
 func init() {
 	cleanAuthenticationPoliciesCmd.PersistentFlags().StringSliceVar(&authenticationPolicyNames, "policy-name", sso.BootstrapAuthenticationPolicyNames, "The list of sign-on (authentication) policy names to search for to delete.  Case sensitive.")
+	viper.BindPFlag("pingone.services.platform.authentication-policies.names", cleanAuthenticationPoliciesCmd.PersistentFlags().Lookup("policy-name"))
 }

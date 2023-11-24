@@ -7,6 +7,7 @@ import (
 	"github.com/patrickcping/pingone-sweep/internal/clean/services/platform"
 	"github.com/patrickcping/pingone-sweep/internal/logger"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -26,6 +27,10 @@ var cleanBrandingThemesCmd = &cobra.Command{
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
+
+		dryRun := viper.GetBool("dry-run")
+		themeNames := viper.GetStringSlice("pingone.services.platform.branding-themes.names")
+
 		l.Debug().Msgf("Clean Command called for branding themes.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
 		l.Debug().Msgf(`Theme names: "%s"`, strings.Join(themeNames, `", "`))
@@ -38,8 +43,8 @@ var cleanBrandingThemesCmd = &cobra.Command{
 
 		cleanConfig := platform.CleanEnvironmentPlatformBrandingThemesConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: environmentID,
-				DryRun:        dryRun,
+				EnvironmentID: viper.GetString("pingone.target-environment-id"),
+				DryRun:        viper.GetBool("dry-run"),
 				Client:        apiClient.API,
 			},
 			BootstrapBrandingThemeNames: themeNames,
@@ -51,4 +56,5 @@ var cleanBrandingThemesCmd = &cobra.Command{
 
 func init() {
 	cleanBrandingThemesCmd.PersistentFlags().StringArrayVar(&themeNames, "theme-name", platform.BootstrapBrandingThemeNames, "The list of theme names to search for to delete.")
+	viper.BindPFlag("pingone.services.platform.branding-themes.names", cleanBrandingThemesCmd.PersistentFlags().Lookup("theme-name"))
 }

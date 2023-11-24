@@ -7,6 +7,7 @@ import (
 	"github.com/patrickcping/pingone-sweep/internal/clean/services/protect"
 	"github.com/patrickcping/pingone-sweep/internal/logger"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -26,6 +27,10 @@ var cleanRiskPoliciesCmd = &cobra.Command{
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
+
+		dryRun := viper.GetBool("dry-run")
+		riskPolicyNames := viper.GetStringSlice("pingone.services.protect.risk-policies.names")
+
 		l.Debug().Msgf("Clean Command called for Risk policies.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
 		l.Debug().Msgf(`Risk Policy names: "%s"`, strings.Join(riskPolicyNames, `", "`))
@@ -38,8 +43,8 @@ var cleanRiskPoliciesCmd = &cobra.Command{
 
 		cleanConfig := protect.CleanEnvironmentProtectRiskPoliciesConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: environmentID,
-				DryRun:        dryRun,
+				EnvironmentID: viper.GetString("pingone.target-environment-id"),
+				DryRun:        viper.GetBool("dry-run"),
 				Client:        apiClient.API,
 			},
 			BootstrapRiskPolicyNames: riskPolicyNames,
@@ -51,4 +56,5 @@ var cleanRiskPoliciesCmd = &cobra.Command{
 
 func init() {
 	cleanRiskPoliciesCmd.PersistentFlags().StringSliceVar(&riskPolicyNames, "policy-name", protect.BootstrapRiskPolicyNames, "The list of Risk policy names to search for to delete.  Case sensitive.")
+	viper.BindPFlag("pingone.services.protect.risk-policies.names", cleanRiskPoliciesCmd.PersistentFlags().Lookup("policy-name"))
 }

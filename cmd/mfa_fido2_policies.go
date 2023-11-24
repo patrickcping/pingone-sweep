@@ -7,6 +7,7 @@ import (
 	"github.com/patrickcping/pingone-sweep/internal/clean/services/mfa"
 	"github.com/patrickcping/pingone-sweep/internal/logger"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -26,6 +27,10 @@ var cleanMfaFido2PoliciesCmd = &cobra.Command{
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
+
+		dryRun := viper.GetBool("dry-run")
+		mfaFido2PolicyNames := viper.GetStringSlice("pingone.services.mfa.fido2-policies.names")
+
 		l.Debug().Msgf("Clean Command called for MFA FIDO2 policies.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
 		l.Debug().Msgf(`MFA FIDO2 Policy names: "%s"`, strings.Join(mfaFido2PolicyNames, `", "`))
@@ -38,8 +43,8 @@ var cleanMfaFido2PoliciesCmd = &cobra.Command{
 
 		cleanConfig := mfa.CleanEnvironmentPlatformMFAFIDO2PoliciesConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: environmentID,
-				DryRun:        dryRun,
+				EnvironmentID: viper.GetString("pingone.target-environment-id"),
+				DryRun:        viper.GetBool("dry-run"),
 				Client:        apiClient.API,
 			},
 			BootstrapMFAFIDO2PolicyNames: mfaFido2PolicyNames,
@@ -51,4 +56,5 @@ var cleanMfaFido2PoliciesCmd = &cobra.Command{
 
 func init() {
 	cleanMfaFido2PoliciesCmd.PersistentFlags().StringSliceVar(&mfaFido2PolicyNames, "policy-name", mfa.BootstrapMFAFIDO2PolicyNames, "The list of MFA FIDO2 policy names to search for to delete.  Case sensitive.")
+	viper.BindPFlag("pingone.services.mfa.fido2-policies.names", cleanMfaFido2PoliciesCmd.PersistentFlags().Lookup("policy-name"))
 }

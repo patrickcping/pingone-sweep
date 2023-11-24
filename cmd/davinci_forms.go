@@ -7,6 +7,7 @@ import (
 	"github.com/patrickcping/pingone-sweep/internal/clean/services/davinci"
 	"github.com/patrickcping/pingone-sweep/internal/logger"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -26,6 +27,10 @@ var cleanDaVinciFormsCmd = &cobra.Command{
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
+
+		dryRun := viper.GetBool("dry-run")
+		daVinciFormNames := viper.GetStringSlice("pingone.services.davinci.forms.names")
+
 		l.Debug().Msgf("Clean Command called for DaVinci forms.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
 		l.Debug().Msgf(`DaVinci Form names: "%s"`, strings.Join(daVinciFormNames, `", "`))
@@ -38,8 +43,8 @@ var cleanDaVinciFormsCmd = &cobra.Command{
 
 		cleanConfig := davinci.CleanEnvironmentDaVinciFormsConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: environmentID,
-				DryRun:        dryRun,
+				EnvironmentID: viper.GetString("pingone.target-environment-id"),
+				DryRun:        viper.GetBool("dry-run"),
 				Client:        apiClient.API,
 			},
 			BootstrapDaVinciFormNames: daVinciFormNames,
@@ -51,4 +56,5 @@ var cleanDaVinciFormsCmd = &cobra.Command{
 
 func init() {
 	cleanDaVinciFormsCmd.PersistentFlags().StringSliceVar(&daVinciFormNames, "form-name", davinci.BootstrapDaVinciFormNames, "The list of DaVinci form names to search for to delete.  Case sensitive.")
+	viper.BindPFlag("pingone.services.davinci.forms.names", cleanDaVinciFormsCmd.PersistentFlags().Lookup("form-name"))
 }
