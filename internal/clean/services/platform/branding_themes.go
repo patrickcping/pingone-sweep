@@ -28,7 +28,7 @@ func (c *CleanEnvironmentPlatformBrandingThemesConfig) Clean(ctx context.Context
 	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, configKey, c.Environment.EnvironmentID)
 
 	if len(c.BootstrapBrandingThemeNames) == 0 {
-		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", configKey)
+		l.Info().Msgf("[%s] No bootstrap names configured - skipping", configKey)
 		return nil
 	}
 

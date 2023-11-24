@@ -29,7 +29,7 @@ func (c *CleanEnvironmentPlatformKeysConfig) Clean(ctx context.Context) error {
 	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, configKey, c.Environment.EnvironmentID)
 
 	if len(c.BootstrapIssuerDNPrefixes) == 0 {
-		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", configKey)
+		l.Info().Msgf("[%s] No bootstrap names configured - skipping", configKey)
 		return nil
 	}
 

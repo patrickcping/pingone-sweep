@@ -32,7 +32,7 @@ func (c *CleanEnvironmentDaVinciFormsConfig) Clean(ctx context.Context) error {
 	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, configKey, c.Environment.EnvironmentID)
 
 	if len(c.BootstrapDaVinciFormNames) == 0 {
-		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", configKey)
+		l.Info().Msgf("[%s] No bootstrap names configured - skipping", configKey)
 		return nil
 	}
 
@@ -42,7 +42,7 @@ func (c *CleanEnvironmentDaVinciFormsConfig) Clean(ctx context.Context) error {
 	}
 
 	if !ok {
-		l.Warn().Msgf("[%s] Bill of materials does not contain applicable service %s - skipping", configKey, management.ENUMPRODUCTTYPE_ONE_DAVINCI)
+		l.Info().Msgf("[%s] Bill of materials does not contain applicable service %s - skipping", configKey, management.ENUMPRODUCTTYPE_ONE_DAVINCI)
 		return nil
 	}
 

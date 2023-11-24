@@ -29,7 +29,7 @@ func (c *CleanEnvironmentProtectRiskPoliciesConfig) Clean(ctx context.Context) e
 	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, configKey, c.Environment.EnvironmentID)
 
 	if len(c.BootstrapRiskPolicyNames) == 0 {
-		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", configKey)
+		l.Info().Msgf("[%s] No bootstrap names configured - skipping", configKey)
 		return nil
 	}
 
@@ -39,7 +39,7 @@ func (c *CleanEnvironmentProtectRiskPoliciesConfig) Clean(ctx context.Context) e
 	}
 
 	if !ok {
-		l.Warn().Msgf("[%s] Bill of materials does not contain applicable service %s - skipping", configKey, management.ENUMPRODUCTTYPE_ONE_RISK)
+		l.Info().Msgf("[%s] Bill of materials does not contain applicable service %s - skipping", configKey, management.ENUMPRODUCTTYPE_ONE_RISK)
 		return nil
 	}
 
