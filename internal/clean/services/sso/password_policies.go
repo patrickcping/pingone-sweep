@@ -34,7 +34,7 @@ func (c *CleanEnvironmentPlatformPasswordPoliciesConfig) Clean(ctx context.Conte
 		return nil
 	}
 
-	ok, err := clean.CheckBillOfMaterials(ctx, configKey, c.Environment, management.ENUMPRODUCTTYPE_ONE_BASE)
+	ok, err := clean.BillOfMaterialsHasService(ctx, configKey, c.Environment, management.ENUMPRODUCTTYPE_ONE_BASE)
 	if err != nil {
 		return err
 	}

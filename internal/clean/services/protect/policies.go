@@ -33,7 +33,7 @@ func (c *CleanEnvironmentProtectRiskPoliciesConfig) Clean(ctx context.Context) e
 		return nil
 	}
 
-	ok, err := clean.CheckBillOfMaterials(ctx, configKey, c.Environment, management.ENUMPRODUCTTYPE_ONE_RISK)
+	ok, err := clean.BillOfMaterialsHasService(ctx, configKey, c.Environment, management.ENUMPRODUCTTYPE_ONE_RISK)
 	if err != nil {
 		return err
 	}

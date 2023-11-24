@@ -36,7 +36,7 @@ func (c *CleanEnvironmentDaVinciFormsConfig) Clean(ctx context.Context) error {
 		return nil
 	}
 
-	ok, err := clean.CheckBillOfMaterials(ctx, configKey, c.Environment, management.ENUMPRODUCTTYPE_ONE_DAVINCI)
+	ok, err := clean.BillOfMaterialsHasService(ctx, configKey, c.Environment, management.ENUMPRODUCTTYPE_ONE_DAVINCI)
 	if err != nil {
 		return err
 	}

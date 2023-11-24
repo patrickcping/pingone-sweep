@@ -31,7 +31,7 @@ type ConfigItemEval struct {
 	CaseSensitive          *bool
 }
 
-func CheckBillOfMaterials(ctx context.Context, configKey string, env CleanEnvironmentConfig, productType management.EnumProductType) (bool, error) {
+func BillOfMaterialsHasService(ctx context.Context, configKey string, env CleanEnvironmentConfig, productType management.EnumProductType) (bool, error) {
 	l := logger.Get()
 
 	var response *management.BillOfMaterials

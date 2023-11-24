@@ -33,7 +33,7 @@ func (c *CleanEnvironmentPlatformMFADevicePoliciesConfig) Clean(ctx context.Cont
 		return nil
 	}
 
-	ok, err := clean.CheckBillOfMaterials(ctx, configKey, c.Environment, management.ENUMPRODUCTTYPE_ONE_MFA)
+	ok, err := clean.BillOfMaterialsHasService(ctx, configKey, c.Environment, management.ENUMPRODUCTTYPE_ONE_MFA)
 	if err != nil {
 		return err
 	}
