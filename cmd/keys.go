@@ -3,9 +3,9 @@ package cmd
 import (
 	"strings"
 
-	"github.com/patrickcping/pingone-clean-config/internal/clean"
-	"github.com/patrickcping/pingone-clean-config/internal/clean/services/platform"
-	"github.com/patrickcping/pingone-clean-config/internal/logger"
+	"github.com/patrickcping/pingone-sweep/internal/clean"
+	"github.com/patrickcping/pingone-sweep/internal/clean/services/platform"
+	"github.com/patrickcping/pingone-sweep/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -21,8 +21,8 @@ var cleanKeysCmd = &cobra.Command{
 
 	Examples:
 	
-	pingone-cleanconfig keys --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
-	pingone-cleanconfig keys --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --issuer-dn-prefix "C=US,O=Ping Identity,OU=Ping Identity" --dry-run
+	pingone-sweep keys --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
+	pingone-sweep keys --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --issuer-dn-prefix "C=US,O=Ping Identity,OU=Ping Identity" --dry-run
 	
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -39,9 +39,9 @@ var cleanKeysCmd = &cobra.Command{
 
 		cleanConfig := platform.CleanEnvironmentPlatformKeysConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				Client:        apiClient.API.ManagementAPIClient,
 				EnvironmentID: environmentID,
 				DryRun:        dryRun,
+				Client:        apiClient.API,
 			},
 			BootstrapIssuerDNPrefixes: keyIssuerDNPrefixes,
 			CaseSensitive:             keyCaseSensitive,

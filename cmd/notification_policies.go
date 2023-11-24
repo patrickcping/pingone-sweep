@@ -3,9 +3,9 @@ package cmd
 import (
 	"strings"
 
-	"github.com/patrickcping/pingone-clean-config/internal/clean"
-	"github.com/patrickcping/pingone-clean-config/internal/clean/services/platform"
-	"github.com/patrickcping/pingone-clean-config/internal/logger"
+	"github.com/patrickcping/pingone-sweep/internal/clean"
+	"github.com/patrickcping/pingone-sweep/internal/clean/services/platform"
+	"github.com/patrickcping/pingone-sweep/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -20,8 +20,8 @@ var cleanNotificationPoliciesCmd = &cobra.Command{
 
 	Examples:
 	
-	pingone-cleanconfig notification-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
-	pingone-cleanconfig notification-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --policy-name "Default Notification Policy" --policy-name "Default Notification Policy 2" --dry-run
+	pingone-sweep notification-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
+	pingone-sweep notification-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --policy-name "Default Notification Policy" --policy-name "Default Notification Policy 2" --dry-run
 	
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -38,9 +38,9 @@ var cleanNotificationPoliciesCmd = &cobra.Command{
 
 		cleanConfig := platform.CleanEnvironmentPlatformNotificationPoliciesConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				Client:        apiClient.API.ManagementAPIClient,
 				EnvironmentID: environmentID,
 				DryRun:        dryRun,
+				Client:        apiClient.API,
 			},
 			BootstrapNotificationPolicyNames: notificationPolicyNames,
 		}

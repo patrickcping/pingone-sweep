@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/patrickcping/pingone-clean-config/cmd"
-	"github.com/patrickcping/pingone-clean-config/internal/logger"
+	"github.com/patrickcping/pingone-sweep/cmd"
+	"github.com/patrickcping/pingone-sweep/internal/logger"
 )
 
 func main() {
 	l := logger.Get()
 
-	l.Debug().Msg("Starting pingone-cleanconfig")
+	l.Debug().Msg("Starting pingone-sweep")
 
 	cmd.Execute()
 }

@@ -1,4 +1,4 @@
-package platform
+package sso
 
 import (
 	"context"
@@ -10,35 +10,46 @@ import (
 )
 
 var (
-	BootstrapNotificationPolicyNames = []string{
-		"Default Notification Policy",
+	BootstrapAuthenticationPolicyNames = []string{
+		"Single_Factor",
+		"Multi_Factor",
 	}
 )
 
-type CleanEnvironmentPlatformNotificationPoliciesConfig struct {
-	Environment                      clean.CleanEnvironmentConfig
-	BootstrapNotificationPolicyNames []string
+type CleanEnvironmentAuthenticationPoliciesConfig struct {
+	Environment                        clean.CleanEnvironmentConfig
+	BootstrapAuthenticationPolicyNames []string
 }
 
-func (c *CleanEnvironmentPlatformNotificationPoliciesConfig) Clean(ctx context.Context) error {
+func (c *CleanEnvironmentAuthenticationPoliciesConfig) Clean(ctx context.Context) error {
 	l := logger.Get()
 
-	configKey := "Notification Policies"
+	configKey := "Authentication Policies"
 
 	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, configKey, c.Environment.EnvironmentID)
 
-	if len(c.BootstrapNotificationPolicyNames) == 0 {
+	if len(c.BootstrapAuthenticationPolicyNames) == 0 {
 		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", configKey)
 		return nil
 	}
 
+	ok, err := clean.CheckBillOfMaterials(ctx, configKey, c.Environment, management.ENUMPRODUCTTYPE_ONE_BASE)
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		l.Warn().Msgf("[%s] Bill of materials does not contain applicable service %s - skipping", configKey, management.ENUMPRODUCTTYPE_ONE_BASE)
+		return nil
+	}
+
 	var response *management.EntityArray
-	err := clean.ReadAllConfig(
+	err = clean.ReadAllConfig(
 		ctx,
 		configKey,
 		c.Environment,
 		func() (any, *http.Response, error) {
-			return c.Environment.Client.ManagementAPIClient.NotificationsPoliciesApi.ReadAllNotificationsPolicies(ctx, c.Environment.EnvironmentID).Execute()
+			return c.Environment.Client.ManagementAPIClient.SignOnPoliciesApi.ReadAllSignOnPolicies(ctx, c.Environment.EnvironmentID).Execute()
 		},
 		&response,
 	)
@@ -46,10 +57,10 @@ func (c *CleanEnvironmentPlatformNotificationPoliciesConfig) Clean(ctx context.C
 		return err
 	}
 
-	if embedded, ok := response.GetEmbeddedOk(); ok && embedded.HasNotificationsPolicies() {
+	if embedded, ok := response.GetEmbeddedOk(); ok && embedded.HasSignOnPolicies() {
 
 		l.Debug().Msgf("[%s] Configuration items found, looping..", configKey)
-		for _, policy := range embedded.GetNotificationsPolicies() {
+		for _, policy := range embedded.GetSignOnPolicies() {
 
 			err := clean.TryCleanConfig(
 				ctx,
@@ -61,11 +72,11 @@ func (c *CleanEnvironmentPlatformNotificationPoliciesConfig) Clean(ctx context.C
 					Default:              policy.Default,
 				},
 				clean.ConfigItemEval{
-					IdentifierListToSearch: c.BootstrapNotificationPolicyNames,
+					IdentifierListToSearch: c.BootstrapAuthenticationPolicyNames,
 					StartsWithStringMatch:  false,
 				},
 				func() (any, *http.Response, error) {
-					fR, fErr := c.Environment.Client.ManagementAPIClient.NotificationsPoliciesApi.DeleteNotificationsPolicy(ctx, c.Environment.EnvironmentID, policy.GetId()).Execute()
+					fR, fErr := c.Environment.Client.ManagementAPIClient.SignOnPoliciesApi.DeleteSignOnPolicy(ctx, c.Environment.EnvironmentID, policy.GetId()).Execute()
 					return nil, fR, fErr
 				},
 				nil,

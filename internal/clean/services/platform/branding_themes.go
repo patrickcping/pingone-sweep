@@ -2,13 +2,11 @@ package platform
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
-	"github.com/patrickcping/pingone-clean-config/internal/clean"
-	"github.com/patrickcping/pingone-clean-config/internal/logger"
-	"github.com/patrickcping/pingone-clean-config/internal/sdk"
 	"github.com/patrickcping/pingone-go-sdk-v2/management"
+	"github.com/patrickcping/pingone-sweep/internal/clean"
+	"github.com/patrickcping/pingone-sweep/internal/logger"
 )
 
 var (
@@ -25,81 +23,63 @@ type CleanEnvironmentPlatformBrandingThemesConfig struct {
 func (c *CleanEnvironmentPlatformBrandingThemesConfig) Clean(ctx context.Context) error {
 	l := logger.Get()
 
-	debugModule := "Branding Themes"
+	configKey := "Branding Themes"
 
-	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, debugModule, c.Environment.EnvironmentID)
+	l.Debug().Msgf(`[%s] Cleaning bootstrap config for environment ID "%s"..`, configKey, c.Environment.EnvironmentID)
 
 	if len(c.BootstrapBrandingThemeNames) == 0 {
-		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", debugModule)
+		l.Warn().Msgf("[%s] No bootstrap names configured - skipping", configKey)
 		return nil
 	}
 
 	var response *management.EntityArray
-	err := sdk.ParseResponse(
+	err := clean.ReadAllConfig(
 		ctx,
-
+		configKey,
+		c.Environment,
 		func() (any, *http.Response, error) {
-			return c.Environment.Client.BrandingThemesApi.ReadBrandingThemes(ctx, c.Environment.EnvironmentID).Execute()
+			return c.Environment.Client.ManagementAPIClient.BrandingThemesApi.ReadBrandingThemes(ctx, c.Environment.EnvironmentID).Execute()
 		},
-		"ReadBrandingThemes",
-		sdk.DefaultCreateReadRetryable,
 		&response,
 	)
-
 	if err != nil {
 		return err
 	}
 
-	if response == nil {
-		return fmt.Errorf("[%s] No configuration items found - the API responded with no data", debugModule)
-	}
-
 	if embedded, ok := response.GetEmbeddedOk(); ok && embedded.HasThemes() {
 
-		l.Debug().Msgf("[%s] Configuration items found, looping..", debugModule)
+		l.Debug().Msgf("[%s] Configuration items found, looping..", configKey)
 		for _, theme := range embedded.GetThemes() {
 
-			l.Debug().Msgf(`[%s] Looping names for "%s"..`, debugModule, theme.Configuration.GetName())
-			for _, defaultThemeName := range c.BootstrapBrandingThemeNames {
+			err := clean.TryCleanConfig(
+				ctx,
+				configKey,
+				c.Environment,
+				clean.ConfigItem{
+					IdentifierToEvaluate: *theme.Configuration.Name,
+					Id:                   *theme.Id,
+					Default:              &theme.Default,
+				},
+				clean.ConfigItemEval{
+					IdentifierListToSearch: c.BootstrapBrandingThemeNames,
+					StartsWithStringMatch:  false,
+				},
+				func() (any, *http.Response, error) {
+					fR, fErr := c.Environment.Client.ManagementAPIClient.BrandingThemesApi.DeleteBrandingTheme(ctx, c.Environment.EnvironmentID, theme.GetId()).Execute()
+					return nil, fR, fErr
+				},
+				nil,
+			)
 
-				if theme.Configuration.GetName() == defaultThemeName {
-					l.Debug().Msgf(`[%s] Found "%s"`, debugModule, defaultThemeName)
-
-					if theme.GetDefault() {
-						l.Warn().Msgf(`[%s] "%s" is set as the environment default - this configuration will not be deleted`, debugModule, theme.Configuration.GetName())
-
-						break
-					}
-
-					if !c.Environment.DryRun {
-						err := sdk.ParseResponse(
-							ctx,
-
-							func() (any, *http.Response, error) {
-								r, err := c.Environment.Client.BrandingThemesApi.DeleteBrandingTheme(ctx, c.Environment.EnvironmentID, theme.GetId()).Execute()
-								return nil, r, err
-							},
-							"DeleteBrandingTheme",
-							sdk.DefaultCreateReadRetryable,
-							nil,
-						)
-
-						if err != nil {
-							return err
-						}
-						l.Info().Msgf(`[%s] "%s" deleted`, debugModule, theme.Configuration.GetName())
-					} else {
-						l.Warn().Msgf(`[%s] Dry run: "%s" with ID "%s" would be deleted`, debugModule, theme.Configuration.GetName(), theme.GetId())
-					}
-
-					break
-				}
+			if err != nil {
+				return err
 			}
+
 		}
-		l.Debug().Msgf("[%s] Done", debugModule)
+		l.Debug().Msgf("[%s] Done", configKey)
 
 	} else {
-		l.Debug().Msgf("[%s] No configuration items found in the target environment", debugModule)
+		l.Debug().Msgf("[%s] No configuration items found in the target environment", configKey)
 	}
 
 	return nil

@@ -1,4 +1,4 @@
-module github.com/patrickcping/pingone-clean-config
+module github.com/patrickcping/pingone-sweep
 
 go 1.20
 

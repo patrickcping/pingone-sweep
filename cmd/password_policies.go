@@ -3,9 +3,9 @@ package cmd
 import (
 	"strings"
 
-	"github.com/patrickcping/pingone-clean-config/internal/clean"
-	"github.com/patrickcping/pingone-clean-config/internal/clean/services/platform"
-	"github.com/patrickcping/pingone-clean-config/internal/logger"
+	"github.com/patrickcping/pingone-sweep/internal/clean"
+	"github.com/patrickcping/pingone-sweep/internal/clean/services/sso"
+	"github.com/patrickcping/pingone-sweep/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -20,8 +20,8 @@ var cleanPasswordPoliciesCmd = &cobra.Command{
 
 	Examples:
 	
-	pingone-cleanconfig password-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
-	pingone-cleanconfig password-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --policy-name "Standard" --policy-name "Basic" --dry-run
+	pingone-sweep password-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
+	pingone-sweep password-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --policy-name "Standard" --policy-name "Basic" --dry-run
 	
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -36,11 +36,11 @@ var cleanPasswordPoliciesCmd = &cobra.Command{
 			return err
 		}
 
-		cleanConfig := platform.CleanEnvironmentPlatformPasswordPoliciesConfig{
+		cleanConfig := sso.CleanEnvironmentPlatformPasswordPoliciesConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				Client:        apiClient.API.ManagementAPIClient,
 				EnvironmentID: environmentID,
 				DryRun:        dryRun,
+				Client:        apiClient.API,
 			},
 			BootstrapPasswordPolicyNames: passwordPolicyNames,
 		}
@@ -50,5 +50,5 @@ var cleanPasswordPoliciesCmd = &cobra.Command{
 }
 
 func init() {
-	cleanPasswordPoliciesCmd.PersistentFlags().StringSliceVar(&passwordPolicyNames, "policy-name", platform.BootstrapPasswordPolicyNames, "The list of password policy names to search for to delete.  Case sensitive.")
+	cleanPasswordPoliciesCmd.PersistentFlags().StringSliceVar(&passwordPolicyNames, "policy-name", sso.BootstrapPasswordPolicyNames, "The list of password policy names to search for to delete.  Case sensitive.")
 }

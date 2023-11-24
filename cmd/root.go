@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/patrickcping/pingone-clean-config/internal/logger"
-	"github.com/patrickcping/pingone-clean-config/internal/sdk"
+	"github.com/patrickcping/pingone-sweep/internal/logger"
+	"github.com/patrickcping/pingone-sweep/internal/sdk"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -32,8 +32,8 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "pingone-cleanconfig",
-	Short:   "pingone-cleanconfig is a CLI to clean demo bootstrap configuration from a PingOne environment.",
+	Use:     "pingone-sweep",
+	Short:   "pingone-sweep is a CLI to clean demo bootstrap configuration from a PingOne environment.",
 	Version: fmt.Sprintf("%s-%s", version, commit),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
@@ -73,12 +73,16 @@ func Execute() {
 func init() {
 	// General function commands
 	rootCmd.AddCommand(
+		cleanAuthenticationPoliciesCmd,
 		cleanBrandingThemesCmd,
 		cleanDaVinciFormsCmd,
 		cleanDirectoryAttributesCmd,
 		cleanKeysCmd,
+		cleanMfaFido2PoliciesCmd,
 		cleanNotificationPoliciesCmd,
 		cleanPasswordPoliciesCmd,
+		cleanRiskPoliciesCmd,
+		cleanVerifyPoliciesCmd,
 	)
 
 	// Add config flags
@@ -98,7 +102,6 @@ func init() {
 
 	// Dry run
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Run a clean routine but don't delete any configuration - instead issue a warning if configuration were to be deleted.")
-
 }
 
 func initApiClient(ctx context.Context, version string) (*sdk.Client, error) {

@@ -3,9 +3,9 @@ package cmd
 import (
 	"strings"
 
-	"github.com/patrickcping/pingone-clean-config/internal/clean"
-	"github.com/patrickcping/pingone-clean-config/internal/clean/services/platform"
-	"github.com/patrickcping/pingone-clean-config/internal/logger"
+	"github.com/patrickcping/pingone-sweep/internal/clean"
+	"github.com/patrickcping/pingone-sweep/internal/clean/services/platform"
+	"github.com/patrickcping/pingone-sweep/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -20,9 +20,9 @@ var cleanDirectoryAttributesCmd = &cobra.Command{
 
 	Examples:
 	
-	pingone-cleanconfig directory-attributes --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36
-	pingone-cleanconfig directory-attributes --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
-	pingone-cleanconfig directory-attributes --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --attribute-names accountId,address,email,externalId,locale,mobilePhone --dry-run
+	pingone-sweep directory-attributes --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36
+	pingone-sweep directory-attributes --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
+	pingone-sweep directory-attributes --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --attribute-names accountId,address,email,externalId,locale,mobilePhone --dry-run
 	
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -39,9 +39,9 @@ var cleanDirectoryAttributesCmd = &cobra.Command{
 
 		cleanConfig := platform.CleanEnvironmentPlatformDirectoryAttributeConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				Client:        apiClient.API.ManagementAPIClient,
 				EnvironmentID: environmentID,
 				DryRun:        dryRun,
+				Client:        apiClient.API,
 			},
 			BootstrapAttributeNames: directoryAttributeNames,
 			SchemaName:              nil,

@@ -2,14 +2,13 @@ package sdk
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"regexp"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/patrickcping/pingone-clean-config/internal/logger"
 	"github.com/patrickcping/pingone-go-sdk-v2/authorize"
 	"github.com/patrickcping/pingone-go-sdk-v2/credentials"
 	"github.com/patrickcping/pingone-go-sdk-v2/management"
@@ -17,6 +16,7 @@ import (
 	"github.com/patrickcping/pingone-go-sdk-v2/pingone/model"
 	"github.com/patrickcping/pingone-go-sdk-v2/risk"
 	"github.com/patrickcping/pingone-go-sdk-v2/verify"
+	"github.com/patrickcping/pingone-sweep/internal/logger"
 )
 
 type Retryable func(context.Context, *http.Response, *model.P1Error) bool
@@ -91,120 +91,53 @@ func RetryWrapper(ctx context.Context, timeout time.Duration, f SDKInterfaceFunc
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
 
-		// error could be management, mfa, authorize, credentials
 		resp, r, err = f()
 
 		if err != nil || r.StatusCode >= 300 {
 
-			var errorModel *model.P1Error
-			var err1 error
+			var errorBody []byte
+			var errR error
 
 			switch t := err.(type) {
 			case *authorize.GenericOpenAPIError:
-
-				if t.Model() != nil {
-					errorModel, err1 = model.RemarshalErrorObj(t.Model().(authorize.P1Error))
-					if err1 != nil {
-						l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-						return retry.NonRetryableError(err)
-					}
-				}
-
-				err, err1 = model.RemarshalGenericOpenAPIErrorObj(t)
-				if err1 != nil {
-					l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-					return retry.NonRetryableError(err)
-				}
-
+				errorBody = t.Body()
+				err, errR = model.RemarshalGenericOpenAPIErrorObj(t)
 			case *credentials.GenericOpenAPIError:
-
-				if t.Model() != nil {
-					errorModel, err1 = model.RemarshalErrorObj(t.Model().(credentials.P1Error))
-					if err1 != nil {
-						l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-						return retry.NonRetryableError(err)
-					}
-				}
-
-				err, err1 = model.RemarshalGenericOpenAPIErrorObj(t)
-				if err1 != nil {
-					l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-					return retry.NonRetryableError(err)
-				}
-
+				errorBody = t.Body()
+				err, errR = model.RemarshalGenericOpenAPIErrorObj(t)
 			case *management.GenericOpenAPIError:
-
-				if t.Model() != nil {
-					errorModel, err1 = model.RemarshalErrorObj(t.Model().(management.P1Error))
-					if err1 != nil {
-						l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-						return retry.NonRetryableError(err)
-					}
-				}
-
-				err, err1 = model.RemarshalGenericOpenAPIErrorObj(t)
-				if err1 != nil {
-					l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-					return retry.NonRetryableError(err)
-				}
-
+				errorBody = t.Body()
+				err, errR = model.RemarshalGenericOpenAPIErrorObj(t)
 			case *mfa.GenericOpenAPIError:
-
-				if t.Model() != nil {
-					errorModel, err1 = model.RemarshalErrorObj(t.Model().(mfa.P1Error))
-					if err1 != nil {
-						l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-						return retry.NonRetryableError(err)
-					}
-				}
-
-				err, err1 = model.RemarshalGenericOpenAPIErrorObj(t)
-				if err1 != nil {
-					l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-					return retry.NonRetryableError(err)
-				}
-
+				errorBody = t.Body()
+				err, errR = model.RemarshalGenericOpenAPIErrorObj(t)
 			case *risk.GenericOpenAPIError:
-
-				if t.Model() != nil {
-					errorModel, err1 = model.RemarshalErrorObj(t.Model().(risk.P1Error))
-					if err1 != nil {
-						l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-						return retry.NonRetryableError(err)
-					}
-				}
-
-				err, err1 = model.RemarshalGenericOpenAPIErrorObj(t)
-				if err1 != nil {
-					l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-					return retry.NonRetryableError(err)
-				}
-
+				errorBody = t.Body()
+				err, errR = model.RemarshalGenericOpenAPIErrorObj(t)
 			case *verify.GenericOpenAPIError:
-
-				if t.Model() != nil {
-					errorModel, err1 = model.RemarshalErrorObj(t.Model().(verify.P1Error))
-					if err1 != nil {
-						l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-						return retry.NonRetryableError(err)
-					}
-				}
-
-				err, err1 = model.RemarshalGenericOpenAPIErrorObj(t)
-				if err1 != nil {
-					l.Error().Msg(fmt.Sprintf("Cannot remarshal type %s", err1))
-					return retry.NonRetryableError(err)
-				}
-
+				errorBody = t.Body()
+				err, errR = model.RemarshalGenericOpenAPIErrorObj(t)
 			case *url.Error:
-				l.Warn().Msg(fmt.Sprintf("Detected HTTP error %s", t.Err.Error()))
-
+				l.Warn().Msgf("Detected HTTP error %s", t.Err.Error())
 			default:
-				l.Warn().Msg(fmt.Sprintf("Detected unknown error (retry) %+v", t))
+				l.Warn().Msgf("Detected unknown error (retry) %+v", t)
+			}
+			if errR != nil {
+				l.Error().Msgf("Cannot remarshal type - %s", errR)
+				return retry.NonRetryableError(err)
+			}
+
+			var errorModel *model.P1Error
+			if len(errorBody) > 0 {
+				err1 := json.Unmarshal(errorBody, &errorModel)
+				if err1 != nil {
+					l.Error().Msgf("Cannot remarshal service error - %s", err1)
+					retry.NonRetryableError(err)
+				}
 			}
 
 			if ((errorModel != nil && errorModel.Id != nil) || r != nil) && (isRetryable(ctx, r, errorModel) || DefaultRetryable(ctx, r, errorModel)) {
-				l.Info().Msg("Retrying ... ")
+				l.Debug().Msgf("Retrying ... ")
 				return retry.RetryableError(err)
 			}
 

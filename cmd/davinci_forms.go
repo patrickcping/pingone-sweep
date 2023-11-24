@@ -3,9 +3,9 @@ package cmd
 import (
 	"strings"
 
-	"github.com/patrickcping/pingone-clean-config/internal/clean"
-	"github.com/patrickcping/pingone-clean-config/internal/clean/services/platform"
-	"github.com/patrickcping/pingone-clean-config/internal/logger"
+	"github.com/patrickcping/pingone-sweep/internal/clean"
+	"github.com/patrickcping/pingone-sweep/internal/clean/services/davinci"
+	"github.com/patrickcping/pingone-sweep/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -20,8 +20,8 @@ var cleanDaVinciFormsCmd = &cobra.Command{
 
 	Examples:
 	
-	pingone-cleanconfig davinci-forms --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
-	pingone-cleanconfig davinci-forms --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --form-name "Default DaVinci Form" --form-name "Default DaVinci Form 2" --dry-run
+	pingone-sweep davinci-forms --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
+	pingone-sweep davinci-forms --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --form-name "Default DaVinci Form" --form-name "Default DaVinci Form 2" --dry-run
 	
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -36,11 +36,11 @@ var cleanDaVinciFormsCmd = &cobra.Command{
 			return err
 		}
 
-		cleanConfig := platform.CleanEnvironmentPlatformDaVinciFormsConfig{
+		cleanConfig := davinci.CleanEnvironmentDaVinciFormsConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				Client:        apiClient.API.ManagementAPIClient,
 				EnvironmentID: environmentID,
 				DryRun:        dryRun,
+				Client:        apiClient.API,
 			},
 			BootstrapDaVinciFormNames: daVinciFormNames,
 		}
@@ -50,5 +50,5 @@ var cleanDaVinciFormsCmd = &cobra.Command{
 }
 
 func init() {
-	cleanDaVinciFormsCmd.PersistentFlags().StringSliceVar(&daVinciFormNames, "form-name", platform.BootstrapDaVinciFormNames, "The list of DaVinci form names to search for to delete.  Case sensitive.")
+	cleanDaVinciFormsCmd.PersistentFlags().StringSliceVar(&daVinciFormNames, "form-name", davinci.BootstrapDaVinciFormNames, "The list of DaVinci form names to search for to delete.  Case sensitive.")
 }
