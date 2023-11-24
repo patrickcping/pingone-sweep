@@ -105,6 +105,7 @@ func (c *CleanEnvironmentPlatformDirectoryAttributeConfig) Clean(ctx context.Con
 				func() (any, *http.Response, error) {
 					attributeUpdate := management.NewSchemaAttributePatch()
 					attributeUpdate.SetEnabled(false)
+					attributeUpdate.SetType(attribute.GetType())
 					return c.Environment.Client.ManagementAPIClient.SchemasApi.UpdateAttributePatch(ctx, c.Environment.EnvironmentID, schema.GetId(), attribute.GetId()).SchemaAttributePatch(*attributeUpdate).Execute()
 				},
 			)
