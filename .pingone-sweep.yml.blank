@@ -1,0 +1,16 @@
+dry-run: true
+
+pingone:
+  services:
+
+    mfa:
+      fido2-policies:
+        names: []
+
+    platform:
+      directory-schema:
+        attribute-names: []
+
+    protect:
+      risk-policies:
+        names: []

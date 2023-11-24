@@ -37,3 +37,4 @@ website/vendor
 vendor
 assets
 env*.sh
+.pingone-sweep*.yml

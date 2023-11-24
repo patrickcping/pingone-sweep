@@ -1,0 +1,33 @@
+dry-run: true
+
+pingone:
+  services:
+
+    mfa:
+      fido2-policies:
+        names:
+          - Passkeys
+          - Security Keys
+
+    platform:
+      directory-schema:
+        attribute-names: 
+          - accountId
+          - address
+          - email
+          - externalId
+          - locale
+          - mobilePhone
+          - name
+          - nickname
+          - photo
+          - preferredLanguage
+          - primaryPhone
+          - timezone
+          - title
+          - type
+
+    protect:
+      risk-policies:
+        names:
+          - Default Risk Policy
