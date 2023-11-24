@@ -66,13 +66,13 @@ func ParseResponseWithCustomTimeout(ctx context.Context, f SDKInterfaceFunc, req
 				return fmt.Errorf("%s - %s", summaryText, detailText)
 			}
 
-			return fmt.Errorf(fmt.Sprintf("Error when calling `%s`: %v", requestID, t.Error()))
+			return fmt.Errorf("Error when calling `%s`: %v", requestID, t.Error())
 
 		case *url.Error:
-			return fmt.Errorf(fmt.Sprintf("Error when calling `%s`: %v", requestID, t.Error()))
+			return fmt.Errorf("Error when calling `%s`: %v", requestID, t.Error())
 
 		default:
-			return fmt.Errorf(fmt.Sprintf("Error when calling `%s`: %v", requestID, t.Error()), fmt.Sprintf("A generic error has occurred.\nError details: %+v", t))
+			return fmt.Errorf("Error when calling `%s`: %v\n%s", requestID, t.Error(), fmt.Sprintf("A generic error has occurred.\nError details: %+v", t))
 		}
 
 	}
