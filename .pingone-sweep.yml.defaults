@@ -3,13 +3,30 @@ dry-run: true
 pingone:
   services:
 
+    davinci:
+      forms:
+        names:
+          - Example - Password Recovery
+		      - Example - Password Recovery User Lookup
+		      - Example - Password Reset
+		      - Example - Registration
+		      - Example - Sign On
+    
     mfa:
+      device-policies:
+        names:
+          - Default MFA Policy
+
       fido2-policies:
         names:
           - Passkeys
           - Security Keys
 
     platform:
+      branding-themes:
+        names:
+          - Ping Default
+
       directory-schema:
         attribute-names: 
           - accountId
@@ -27,7 +44,33 @@ pingone:
           - title
           - type
 
+      keys:
+        case-sensitive: true
+        issuer-dn-prefixes:
+          - C=US,O=Ping Identity,OU=Ping Identity
+
+      notification-policies:
+        names:
+          - Default Notification Policy
+
     protect:
       risk-policies:
         names:
           - Default Risk Policy
+    
+    sso:
+      authentication-policies:
+        names:
+          - Single_Factor
+		      - Multi_Factor
+
+      password-policies:
+        names:
+          - Standard
+          - Basic
+          - Passphrase
+
+    verify:
+      policies:
+        names:
+          - Default Verify Policy

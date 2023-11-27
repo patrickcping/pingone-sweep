@@ -56,5 +56,5 @@ var cleanPasswordPoliciesCmd = &cobra.Command{
 
 func init() {
 	cleanPasswordPoliciesCmd.PersistentFlags().StringSliceVar(&passwordPolicyNames, "policy-name", sso.BootstrapPasswordPolicyNames, "The list of password policy names to search for to delete.  Case sensitive.")
-	viper.BindPFlag("pingone.services.platform.password-policies.names", cleanPasswordPoliciesCmd.PersistentFlags().Lookup("policy-name"))
+	viper.BindPFlag("pingone.services.sso.password-policies.names", cleanPasswordPoliciesCmd.PersistentFlags().Lookup("policy-name"))
 }

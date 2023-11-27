@@ -56,5 +56,5 @@ var cleanAuthenticationPoliciesCmd = &cobra.Command{
 
 func init() {
 	cleanAuthenticationPoliciesCmd.PersistentFlags().StringSliceVar(&authenticationPolicyNames, "policy-name", sso.BootstrapAuthenticationPolicyNames, "The list of sign-on (authentication) policy names to search for to delete.  Case sensitive.")
-	viper.BindPFlag("pingone.services.platform.authentication-policies.names", cleanAuthenticationPoliciesCmd.PersistentFlags().Lookup("policy-name"))
+	viper.BindPFlag("pingone.services.sso.authentication-policies.names", cleanAuthenticationPoliciesCmd.PersistentFlags().Lookup("policy-name"))
 }
