@@ -56,5 +56,5 @@ var cleanMfaDevicePoliciesCmd = &cobra.Command{
 
 func init() {
 	cleanMfaDevicePoliciesCmd.PersistentFlags().StringSliceVar(&mfaDevicePolicyNames, "policy-name", mfa.BootstrapMFADevicePolicyNames, "The list of MFA Device policy names to search for to delete.  Case sensitive.")
-	viper.BindPFlag("pingone.services.mfa.device-policies.names", cleanMfaFido2PoliciesCmd.PersistentFlags().Lookup("policy-name"))
+	viper.BindPFlag("pingone.services.mfa.device-policies.names", cleanMfaDevicePoliciesCmd.PersistentFlags().Lookup("policy-name"))
 }

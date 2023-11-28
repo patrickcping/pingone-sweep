@@ -29,7 +29,7 @@ var cleanAuthenticationPoliciesCmd = &cobra.Command{
 		l := logger.Get()
 
 		dryRun := viper.GetBool("dry-run")
-		authenticationPolicyNames := viper.GetStringSlice("pingone.services.platform.authentication-policies.names")
+		authenticationPolicyNames := viper.GetStringSlice("pingone.services.sso.authentication-policies.names")
 
 		l.Debug().Msgf("Clean Command called for sign-on (authentication) policies.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)

@@ -29,7 +29,7 @@ var cleanPasswordPoliciesCmd = &cobra.Command{
 		l := logger.Get()
 
 		dryRun := viper.GetBool("dry-run")
-		passwordPolicyNames := viper.GetStringSlice("pingone.services.platform.password-policies.names")
+		passwordPolicyNames := viper.GetStringSlice("pingone.services.sso.password-policies.names")
 
 		l.Debug().Msgf("Clean Command called for password policies.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)

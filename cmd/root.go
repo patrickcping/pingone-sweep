@@ -102,6 +102,7 @@ func init() {
 		cleanDaVinciFormsCmd,
 		cleanDirectoryAttributesCmd,
 		cleanKeysCmd,
+		cleanMfaDevicePoliciesCmd,
 		cleanMfaFido2PoliciesCmd,
 		cleanNotificationPoliciesCmd,
 		cleanPasswordPoliciesCmd,
