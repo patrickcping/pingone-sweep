@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -15,25 +16,38 @@ var (
 	verifyPolicyNames []string
 )
 
+const (
+	verifyPoliciesCmdName = "verify-policies"
+
+	verifyPolicyNamesParamName      = "policy-name"
+	verifyPolicyNamesParamConfigKey = "pingone.services.verify.policies.names"
+)
+
+var (
+	verifyPolicyConfigurationParamMapping = map[string]string{
+		verifyPolicyNamesParamName: verifyPolicyNamesParamConfigKey,
+	}
+)
+
 var cleanVerifyPoliciesCmd = &cobra.Command{
-	Use:   "verify-policies",
+	Use:   verifyPoliciesCmdName,
 	Short: "Clean unwanted demo Verify policy configuration",
-	Long: `Clean away demo configuration and prepare an environment for production-ready configuration.
+	Long: fmt.Sprintf(`Clean away demo configuration and prepare an environment for production-ready configuration.
 
 	Examples:
 	
-	pingone-sweep verify-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
-	pingone-sweep verify-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --policy-name "Default Verify Policy" --policy-name "Default Verify Policy 2" --dry-run
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s "Default Verify Policy" --%s "Default Verify Policy 2" --%s
 	
-	`,
+	`, verifyPoliciesCmdName, environmentIDParamName, dryRunParamName, verifyPoliciesCmdName, environmentIDParamName, verifyPolicyNamesParamName, verifyPolicyNamesParamName, dryRunParamName),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		cmd.SetOut(os.Stdout)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
 
-		dryRun := viper.GetBool("dry-run")
-		verifyPolicyNames := viper.GetStringSlice("pingone.services.verify.policies.names")
+		dryRun := viper.GetBool(dryRunParamConfigKey)
+		verifyPolicyNames := viper.GetStringSlice(verifyPolicyNamesParamConfigKey)
 
 		l.Debug().Msgf("Clean Command called for Verify policies.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
@@ -47,8 +61,8 @@ var cleanVerifyPoliciesCmd = &cobra.Command{
 
 		cleanConfig := verify.CleanEnvironmentVerifyPoliciesConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: viper.GetString("pingone.target-environment-id"),
-				DryRun:        viper.GetBool("dry-run"),
+				EnvironmentID: viper.GetString(environmentIDParamConfigKey),
+				DryRun:        dryRun,
 				Client:        apiClient.API,
 			},
 			BootstrapVerifyPolicyNames: verifyPolicyNames,
@@ -61,6 +75,10 @@ var cleanVerifyPoliciesCmd = &cobra.Command{
 }
 
 func init() {
-	cleanVerifyPoliciesCmd.PersistentFlags().StringSliceVar(&verifyPolicyNames, "policy-name", verify.BootstrapVerifyPolicyNames, "The list of Verify policy names to search for to delete.  Case sensitive.")
-	viper.BindPFlag("pingone.services.verify.policies.names", cleanVerifyPoliciesCmd.PersistentFlags().Lookup("policy-name"))
+	cleanVerifyPoliciesCmd.PersistentFlags().StringSliceVar(&verifyPolicyNames, verifyPolicyNamesParamName, verify.BootstrapVerifyPolicyNames, "The list of Verify policy names to search for to delete.  Case sensitive.")
+
+	// Do the binds
+	for k, v := range verifyPolicyConfigurationParamMapping {
+		viper.BindPFlag(v, cleanVerifyPoliciesCmd.PersistentFlags().Lookup(k))
+	}
 }

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/patrickcping/pingone-sweep/internal/clean"
@@ -14,23 +15,36 @@ var (
 	directoryAttributeNames []string
 )
 
+const (
+	directoryAttributesCmdName = "directory-attributes"
+
+	directoryAttributeNamesParamName      = "attribute-names"
+	directoryAttributeNamesParamConfigKey = "pingone.services.platform.directory-schema.attribute-names"
+)
+
+var (
+	directoryAttributesConfigurationParamMapping = map[string]string{
+		directoryAttributeNamesParamName: directoryAttributeNamesParamConfigKey,
+	}
+)
+
 var cleanDirectoryAttributesCmd = &cobra.Command{
-	Use:   "directory-attributes",
+	Use:   directoryAttributesCmdName,
 	Short: "Disable unwanted demo directory schema attributes",
-	Long: `Clean away demo configuration and prepare an environment for production-ready configuration.
+	Long: fmt.Sprintf(`Clean away demo configuration and prepare an environment for production-ready configuration.
 
 	Examples:
 	
-	pingone-sweep directory-attributes --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36
-	pingone-sweep directory-attributes --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
-	pingone-sweep directory-attributes --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --attribute-names accountId,address,email,externalId,locale,mobilePhone --dry-run
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s accountId,address,email,externalId,locale,mobilePhone --%s
 	
-	`,
+	`, directoryAttributesCmdName, environmentIDParamName, directoryAttributesCmdName, environmentIDParamName, dryRunParamName, directoryAttributesCmdName, environmentIDParamName, directoryAttributeNamesParamName, dryRunParamName),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
 
-		dryRun := viper.GetBool("dry-run")
-		directoryAttributeNames := viper.GetStringSlice("pingone.services.platform.directory-schema.attribute-names")
+		dryRun := viper.GetBool(dryRunParamConfigKey)
+		directoryAttributeNames := viper.GetStringSlice(directoryAttributeNamesParamConfigKey)
 
 		l.Debug().Msgf("Clean Command called for directory attributes.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
@@ -44,8 +58,8 @@ var cleanDirectoryAttributesCmd = &cobra.Command{
 
 		cleanConfig := platform.CleanEnvironmentPlatformDirectoryAttributeConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: viper.GetString("pingone.target-environment-id"),
-				DryRun:        viper.GetBool("dry-run"),
+				EnvironmentID: viper.GetString(environmentIDParamConfigKey),
+				DryRun:        dryRun,
 				Client:        apiClient.API,
 			},
 			BootstrapAttributeNames: directoryAttributeNames,
@@ -57,6 +71,10 @@ var cleanDirectoryAttributesCmd = &cobra.Command{
 }
 
 func init() {
-	cleanDirectoryAttributesCmd.PersistentFlags().StringSliceVar(&directoryAttributeNames, "attribute-names", platform.BootstrapDirectoryAttributeNames, "The list of directory attribute names to search for to disable.")
-	viper.BindPFlag("pingone.services.platform.directory-schema.attribute-names", cleanDirectoryAttributesCmd.PersistentFlags().Lookup("attribute-names"))
+	cleanDirectoryAttributesCmd.PersistentFlags().StringSliceVar(&directoryAttributeNames, directoryAttributeNamesParamName, platform.BootstrapDirectoryAttributeNames, "The list of directory attribute names to search for to disable.")
+
+	// Do the binds
+	for k, v := range directoryAttributesConfigurationParamMapping {
+		viper.BindPFlag(v, cleanDirectoryAttributesCmd.PersistentFlags().Lookup(k))
+	}
 }

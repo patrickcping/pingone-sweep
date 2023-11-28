@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/patrickcping/pingone-sweep/internal/clean"
@@ -14,22 +15,35 @@ var (
 	authenticationPolicyNames []string
 )
 
+const (
+	authenticationPoliciesCmdName = "authentication-policies"
+
+	authenticationPolicyNamesParamName      = "policy-name"
+	authenticationPolicyNamesParamConfigKey = "pingone.services.sso.authentication-policies.names"
+)
+
+var (
+	authenticationPolicyConfigurationParamMapping = map[string]string{
+		authenticationPolicyNamesParamName: authenticationPolicyNamesParamConfigKey,
+	}
+)
+
 var cleanAuthenticationPoliciesCmd = &cobra.Command{
-	Use:   "authentication-policies",
+	Use:   authenticationPoliciesCmdName,
 	Short: "Clean unwanted demo sign-on (authentication) policy configuration",
-	Long: `Clean away demo configuration and prepare an environment for production-ready configuration.
+	Long: fmt.Sprintf(`Clean away demo configuration and prepare an environment for production-ready configuration.
 
 	Examples:
 	
-	pingone-sweep authentication-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
-	pingone-sweep authentication-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --policy-name "Single_Factor" --policy-name "Multi_Factor" --dry-run
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s "Single_Factor" --%s "Multi_Factor" --%s
 	
-	`,
+	`, authenticationPoliciesCmdName, environmentIDParamName, dryRunParamName, authenticationPoliciesCmdName, environmentIDParamName, authenticationPolicyNamesParamName, authenticationPolicyNamesParamName, dryRunParamName),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
 
-		dryRun := viper.GetBool("dry-run")
-		authenticationPolicyNames := viper.GetStringSlice("pingone.services.sso.authentication-policies.names")
+		dryRun := viper.GetBool(dryRunParamConfigKey)
+		authenticationPolicyNames := viper.GetStringSlice(authenticationPolicyNamesParamConfigKey)
 
 		l.Debug().Msgf("Clean Command called for sign-on (authentication) policies.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
@@ -43,8 +57,8 @@ var cleanAuthenticationPoliciesCmd = &cobra.Command{
 
 		cleanConfig := sso.CleanEnvironmentAuthenticationPoliciesConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: viper.GetString("pingone.target-environment-id"),
-				DryRun:        viper.GetBool("dry-run"),
+				EnvironmentID: viper.GetString(environmentIDParamConfigKey),
+				DryRun:        dryRun,
 				Client:        apiClient.API,
 			},
 			BootstrapAuthenticationPolicyNames: authenticationPolicyNames,
@@ -55,6 +69,10 @@ var cleanAuthenticationPoliciesCmd = &cobra.Command{
 }
 
 func init() {
-	cleanAuthenticationPoliciesCmd.PersistentFlags().StringSliceVar(&authenticationPolicyNames, "policy-name", sso.BootstrapAuthenticationPolicyNames, "The list of sign-on (authentication) policy names to search for to delete.  Case sensitive.")
-	viper.BindPFlag("pingone.services.sso.authentication-policies.names", cleanAuthenticationPoliciesCmd.PersistentFlags().Lookup("policy-name"))
+	cleanAuthenticationPoliciesCmd.PersistentFlags().StringSliceVar(&authenticationPolicyNames, authenticationPolicyNamesParamName, sso.BootstrapAuthenticationPolicyNames, "The list of sign-on (authentication) policy names to search for to delete.  Case sensitive.")
+
+	// Do the binds
+	for k, v := range authenticationPolicyConfigurationParamMapping {
+		viper.BindPFlag(v, cleanAuthenticationPoliciesCmd.PersistentFlags().Lookup(k))
+	}
 }

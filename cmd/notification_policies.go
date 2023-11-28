@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/patrickcping/pingone-sweep/internal/clean"
@@ -14,22 +15,35 @@ var (
 	notificationPolicyNames []string
 )
 
+const (
+	notificationPoliciesCmdName = "notification-policies"
+
+	notificationPolicyNamesParamName      = "policy-name"
+	notificationPolicyNamesParamConfigKey = "pingone.services.platform.notification-policies.names"
+)
+
+var (
+	notificationPolicyConfigurationParamMapping = map[string]string{
+		notificationPolicyNamesParamName: notificationPolicyNamesParamConfigKey,
+	}
+)
+
 var cleanNotificationPoliciesCmd = &cobra.Command{
-	Use:   "notification-policies",
+	Use:   notificationPoliciesCmdName,
 	Short: "Clean unwanted demo notification policy configuration",
-	Long: `Clean away demo configuration and prepare an environment for production-ready configuration.
+	Long: fmt.Sprintf(`Clean away demo configuration and prepare an environment for production-ready configuration.
 
 	Examples:
 	
-	pingone-sweep notification-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
-	pingone-sweep notification-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --policy-name "Default Notification Policy" --policy-name "Default Notification Policy 2" --dry-run
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s "Default Notification Policy" --%s "Default Notification Policy 2" --%s
 	
-	`,
+	`, notificationPoliciesCmdName, environmentIDParamName, dryRunParamName, notificationPoliciesCmdName, environmentIDParamName, notificationPolicyNamesParamName, notificationPolicyNamesParamName, dryRunParamName),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
 
-		dryRun := viper.GetBool("dry-run")
-		notificationPolicyNames := viper.GetStringSlice("pingone.services.platform.notification-policies.names")
+		dryRun := viper.GetBool(dryRunParamConfigKey)
+		notificationPolicyNames := viper.GetStringSlice(notificationPolicyNamesParamConfigKey)
 
 		l.Debug().Msgf("Clean Command called for notification policies.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
@@ -43,8 +57,8 @@ var cleanNotificationPoliciesCmd = &cobra.Command{
 
 		cleanConfig := platform.CleanEnvironmentPlatformNotificationPoliciesConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: viper.GetString("pingone.target-environment-id"),
-				DryRun:        viper.GetBool("dry-run"),
+				EnvironmentID: viper.GetString(environmentIDParamConfigKey),
+				DryRun:        dryRun,
 				Client:        apiClient.API,
 			},
 			BootstrapNotificationPolicyNames: notificationPolicyNames,
@@ -55,6 +69,10 @@ var cleanNotificationPoliciesCmd = &cobra.Command{
 }
 
 func init() {
-	cleanNotificationPoliciesCmd.PersistentFlags().StringSliceVar(&notificationPolicyNames, "policy-name", platform.BootstrapNotificationPolicyNames, "The list of notification policy names to search for to delete.  Case sensitive.")
-	viper.BindPFlag("pingone.services.platform.notification-policies.names", cleanNotificationPoliciesCmd.PersistentFlags().Lookup("policy-name"))
+	cleanNotificationPoliciesCmd.PersistentFlags().StringSliceVar(&notificationPolicyNames, notificationPolicyNamesParamName, platform.BootstrapNotificationPolicyNames, "The list of notification policy names to search for to delete.  Case sensitive.")
+
+	// Do the binds
+	for k, v := range notificationPolicyConfigurationParamMapping {
+		viper.BindPFlag(v, cleanNotificationPoliciesCmd.PersistentFlags().Lookup(k))
+	}
 }

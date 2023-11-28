@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/patrickcping/pingone-sweep/internal/clean"
@@ -14,22 +15,35 @@ var (
 	riskPolicyNames []string
 )
 
+const (
+	riskPoliciesCmdName = "risk-policies"
+
+	riskPolicyNamesParamName      = "policy-name"
+	riskPolicyNamesParamConfigKey = "pingone.services.protect.risk-policies.names"
+)
+
+var (
+	riskPolicyConfigurationParamMapping = map[string]string{
+		riskPolicyNamesParamName: riskPolicyNamesParamConfigKey,
+	}
+)
+
 var cleanRiskPoliciesCmd = &cobra.Command{
-	Use:   "risk-policies",
+	Use:   riskPoliciesCmdName,
 	Short: "Clean unwanted demo Risk policy configuration",
-	Long: `Clean away demo configuration and prepare an environment for production-ready configuration.
+	Long: fmt.Sprintf(`Clean away demo configuration and prepare an environment for production-ready configuration.
 
 	Examples:
 	
-	pingone-sweep risk-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
-	pingone-sweep risk-policies --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --policy-name "Default Risk Policy" --policy-name "Default Risk Policy 2" --dry-run
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s "Default Risk Policy" --%s "Default Risk Policy 2" --%s
 	
-	`,
+	`, riskPoliciesCmdName, environmentIDParamName, dryRunParamName, riskPoliciesCmdName, environmentIDParamName, riskPolicyNamesParamName, riskPolicyNamesParamName, dryRunParamName),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
 
-		dryRun := viper.GetBool("dry-run")
-		riskPolicyNames := viper.GetStringSlice("pingone.services.protect.risk-policies.names")
+		dryRun := viper.GetBool(dryRunParamConfigKey)
+		riskPolicyNames := viper.GetStringSlice(riskPolicyNamesParamConfigKey)
 
 		l.Debug().Msgf("Clean Command called for Risk policies.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
@@ -43,8 +57,8 @@ var cleanRiskPoliciesCmd = &cobra.Command{
 
 		cleanConfig := protect.CleanEnvironmentProtectRiskPoliciesConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: viper.GetString("pingone.target-environment-id"),
-				DryRun:        viper.GetBool("dry-run"),
+				EnvironmentID: viper.GetString(environmentIDParamConfigKey),
+				DryRun:        dryRun,
 				Client:        apiClient.API,
 			},
 			BootstrapRiskPolicyNames: riskPolicyNames,
@@ -55,6 +69,10 @@ var cleanRiskPoliciesCmd = &cobra.Command{
 }
 
 func init() {
-	cleanRiskPoliciesCmd.PersistentFlags().StringSliceVar(&riskPolicyNames, "policy-name", protect.BootstrapRiskPolicyNames, "The list of Risk policy names to search for to delete.  Case sensitive.")
-	viper.BindPFlag("pingone.services.protect.risk-policies.names", cleanRiskPoliciesCmd.PersistentFlags().Lookup("policy-name"))
+	cleanRiskPoliciesCmd.PersistentFlags().StringSliceVar(&riskPolicyNames, riskPolicyNamesParamName, protect.BootstrapRiskPolicyNames, "The list of Risk policy names to search for to delete.  Case sensitive.")
+
+	// Do the binds
+	for k, v := range riskPolicyConfigurationParamMapping {
+		viper.BindPFlag(v, cleanRiskPoliciesCmd.PersistentFlags().Lookup(k))
+	}
 }

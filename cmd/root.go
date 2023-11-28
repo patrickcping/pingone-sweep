@@ -21,6 +21,26 @@ var (
 	commit string = ""
 )
 
+const (
+	regionParamName      = "region"
+	regionParamConfigKey = "pingone.region"
+
+	environmentIDParamName      = "target-environment-id"
+	environmentIDParamConfigKey = "pingone.target-environment-id"
+
+	dryRunParamName      = "dry-run"
+	dryRunParamConfigKey = "dry-run"
+
+	workerEnvironmentIDParamName      = "worker-environment-id"
+	workerEnvironmentIDParamConfigKey = "pingone.worker-environment-id"
+
+	workerClientIDParamName      = "worker-client-id"
+	workerClientIDParamConfigKey = "pingone.worker-client-id"
+
+	workerClientSecretParamName      = "worker-client-secret"
+	workerClientSecretParamConfigKey = "pingone.worker-client-secret"
+)
+
 var (
 	region              string
 	workerEnvironmentId string
@@ -31,12 +51,12 @@ var (
 	apiClient           *sdk.Client
 
 	rootConfigurationParamMapping = map[string]string{
-		"region":                "pingone.region",
-		"target-environment-id": "pingone.target-environment-id",
-		"dry-run":               "dry-run",
-		"worker-environment-id": "pingone.worker-environment-id",
-		"worker-client-id":      "pingone.worker-client-id",
-		"worker-client-secret":  "pingone.worker-client-secret",
+		regionParamName:              regionParamConfigKey,
+		environmentIDParamName:       environmentIDParamConfigKey,
+		dryRunParamName:              dryRunParamConfigKey,
+		workerEnvironmentIDParamName: workerEnvironmentIDParamConfigKey,
+		workerClientIDParamName:      workerClientIDParamConfigKey,
+		workerClientSecretParamName:  workerClientSecretParamConfigKey,
 	}
 )
 
@@ -111,22 +131,22 @@ func init() {
 	)
 
 	// Add config flags
-	rootCmd.PersistentFlags().StringVarP(&region, "region", "r", viper.GetString("PINGONE_REGION"), "The region code of the service (NA, EU, AP, CA).")
-	rootCmd.MarkPersistentFlagRequired("region")
+	rootCmd.PersistentFlags().StringVarP(&region, regionParamName, "r", viper.GetString("PINGONE_REGION"), "The region code of the service (NA, EU, AP, CA).")
+	rootCmd.MarkPersistentFlagRequired(regionParamName)
 
 	// Worker token auth
-	rootCmd.PersistentFlags().StringVar(&workerEnvironmentId, "worker-environment-id", viper.GetString("PINGONE_ENVIRONMENT_ID"), "The ID of the PingOne environment that contains the worker token client used to authenticate.")
-	rootCmd.PersistentFlags().StringVar(&workerClientId, "worker-client-id", viper.GetString("PINGONE_CLIENT_ID"), "The ID of the worker app (also the client ID) used to authenticate.")
-	rootCmd.PersistentFlags().StringVar(&workerClientSecret, "worker-client-secret", viper.GetString("PINGONE_CLIENT_SECRET"), "The client secret of the worker app used to authenticate.")
+	rootCmd.PersistentFlags().StringVar(&workerEnvironmentId, workerEnvironmentIDParamName, viper.GetString("PINGONE_ENVIRONMENT_ID"), "The ID of the PingOne environment that contains the worker token client used to authenticate.")
+	rootCmd.PersistentFlags().StringVar(&workerClientId, workerClientIDParamName, viper.GetString("PINGONE_CLIENT_ID"), "The ID of the worker app (also the client ID) used to authenticate.")
+	rootCmd.PersistentFlags().StringVar(&workerClientSecret, workerClientSecretParamName, viper.GetString("PINGONE_CLIENT_SECRET"), "The client secret of the worker app used to authenticate.")
 
-	rootCmd.MarkFlagsRequiredTogether("worker-environment-id", "worker-client-id", "worker-client-secret")
+	rootCmd.MarkFlagsRequiredTogether(workerEnvironmentIDParamName, workerClientIDParamName, workerClientSecretParamName)
 
 	// Target environment
-	rootCmd.PersistentFlags().StringVar(&environmentID, "target-environment-id", viper.GetString("PINGONE_TARGET_ENVIRONMENT_ID"), "The ID of the target environment to clean.")
-	rootCmd.MarkPersistentFlagRequired("target-environment-id")
+	rootCmd.PersistentFlags().StringVar(&environmentID, environmentIDParamName, viper.GetString("PINGONE_TARGET_ENVIRONMENT_ID"), "The ID of the target environment to clean.")
+	rootCmd.MarkPersistentFlagRequired(environmentIDParamName)
 
 	// Dry run
-	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Run a clean routine but don't delete any configuration - instead issue a warning if configuration were to be deleted.")
+	rootCmd.PersistentFlags().BoolVar(&dryRun, dryRunParamName, false, "Run a clean routine but don't delete any configuration - instead issue a warning if configuration were to be deleted.")
 
 	// Do the binds
 	for k, v := range rootConfigurationParamMapping {
@@ -170,10 +190,10 @@ func initApiClient(ctx context.Context, version string) (*sdk.Client, error) {
 	l.Debug().Msgf("Initialising API client..")
 
 	apiConfig := sdk.Config{
-		ClientID:      viper.GetString("pingone.worker-client-id"),
-		ClientSecret:  viper.GetString("pingone.worker-client-secret"),
-		EnvironmentID: viper.GetString("pingone.worker-environment-id"),
-		Region:        viper.GetString("pingone.region"),
+		ClientID:      viper.GetString(workerClientIDParamConfigKey),
+		ClientSecret:  viper.GetString(workerClientSecretParamConfigKey),
+		EnvironmentID: viper.GetString(workerEnvironmentIDParamConfigKey),
+		Region:        viper.GetString(regionParamConfigKey),
 	}
 
 	return apiConfig.APIClient(ctx, version)

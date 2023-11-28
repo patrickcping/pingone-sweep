@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/patrickcping/pingone-sweep/internal/clean"
@@ -15,23 +16,40 @@ var (
 	keyCaseSensitive    bool
 )
 
+const (
+	keysCmdName = "keys"
+
+	keysIssuerDNPrefixesParamName      = "issuer-dn-prefix"
+	keysIssuerDNPrefixesParamConfigKey = "pingone.services.platform.keys.issuer-dn-prefixes"
+
+	keysCaseSensitiveParamName      = "case-sensitive"
+	keysCaseSensitiveParamConfigKey = "pingone.services.platform.keys.case-sensitive"
+)
+
+var (
+	keysConfigurationParamMapping = map[string]string{
+		keysIssuerDNPrefixesParamName: keysIssuerDNPrefixesParamConfigKey,
+		keysCaseSensitiveParamName:    keysCaseSensitiveParamConfigKey,
+	}
+)
+
 var cleanKeysCmd = &cobra.Command{
-	Use:   "keys",
+	Use:   keysCmdName,
 	Short: "Clean unwanted demo key configuration",
-	Long: `Clean away demo configuration and prepare an environment for production-ready configuration.
+	Long: fmt.Sprintf(`Clean away demo configuration and prepare an environment for production-ready configuration.
 
 	Examples:
 	
-	pingone-sweep keys --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --dry-run
-	pingone-sweep keys --target-environment-id 4457a4b7-332e-4e38-9956-09d6e8a19d36 --issuer-dn-prefix "C=US,O=Ping Identity,OU=Ping Identity" --dry-run
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s
+	pingone-sweep %s --%s 4457a4b7-332e-4e38-9956-09d6e8a19d36 --%s "C=US,O=Ping Identity,OU=Ping Identity" --%s
 	
-	`,
+	`, keysCmdName, environmentIDParamName, dryRunParamName, keysCmdName, environmentIDParamName, keysIssuerDNPrefixesParamName, dryRunParamName),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.Get()
 
-		dryRun := viper.GetBool("dry-run")
-		keyIssuerDNPrefixes := viper.GetStringSlice("pingone.services.platform.keys.issuer-dn-prefixes")
-		keyCaseSensitive := viper.GetBool("pingone.services.platform.keys.case-sensitive")
+		dryRun := viper.GetBool(dryRunParamConfigKey)
+		keyIssuerDNPrefixes := viper.GetStringSlice(keysIssuerDNPrefixesParamConfigKey)
+		keyCaseSensitive := viper.GetBool(keysCaseSensitiveParamConfigKey)
 
 		l.Debug().Msgf("Clean Command called for keys.")
 		l.Debug().Msgf("Dry run setting: %t", dryRun)
@@ -45,8 +63,8 @@ var cleanKeysCmd = &cobra.Command{
 
 		cleanConfig := platform.CleanEnvironmentPlatformKeysConfig{
 			Environment: clean.CleanEnvironmentConfig{
-				EnvironmentID: viper.GetString("pingone.target-environment-id"),
-				DryRun:        viper.GetBool("dry-run"),
+				EnvironmentID: viper.GetString(environmentIDParamConfigKey),
+				DryRun:        dryRun,
 				Client:        apiClient.API,
 			},
 			BootstrapIssuerDNPrefixes: keyIssuerDNPrefixes,
@@ -58,8 +76,11 @@ var cleanKeysCmd = &cobra.Command{
 }
 
 func init() {
-	cleanKeysCmd.PersistentFlags().StringArrayVar(&keyIssuerDNPrefixes, "issuer-dn-prefix", platform.BootstrapKeyIssuerDNPrefixes, "The list of issuer DN prefixes to search for to delete.")
-	viper.BindPFlag("pingone.services.platform.keys.issuer-dn-prefixes", cleanKeysCmd.PersistentFlags().Lookup("issuer-dn-prefix"))
-	cleanKeysCmd.PersistentFlags().BoolVar(&keyCaseSensitive, "case-sensitive", false, "The issuer DN prefix search is case sensitive.")
-	viper.BindPFlag("pingone.services.platform.keys.case-sensitive", cleanKeysCmd.PersistentFlags().Lookup("case-sensitive"))
+	cleanKeysCmd.PersistentFlags().StringArrayVar(&keyIssuerDNPrefixes, keysIssuerDNPrefixesParamName, platform.BootstrapKeyIssuerDNPrefixes, "The list of issuer DN prefixes to search for to delete.")
+	cleanKeysCmd.PersistentFlags().BoolVar(&keyCaseSensitive, keysCaseSensitiveParamName, false, "The issuer DN prefix search is case sensitive.")
+
+	// Do the binds
+	for k, v := range keysConfigurationParamMapping {
+		viper.BindPFlag(v, cleanKeysCmd.PersistentFlags().Lookup(k))
+	}
 }
