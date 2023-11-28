@@ -69,10 +69,11 @@ var cleanMfaFido2PoliciesCmd = &cobra.Command{
 }
 
 func init() {
+	l := logger.Get()
+
 	cleanMfaFido2PoliciesCmd.PersistentFlags().StringSliceVar(&mfaFido2PolicyNames, mfaFido2PolicyNamesParamName, mfa.BootstrapMFAFIDO2PolicyNames, "The list of MFA FIDO2 policy names to search for to delete.  Case sensitive.")
 
-	// Do the binds
-	for k, v := range mfaFido2PolicyConfigurationParamMapping {
-		viper.BindPFlag(v, cleanMfaFido2PoliciesCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(mfaFido2PolicyConfigurationParamMapping, cleanMfaFido2PoliciesCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }

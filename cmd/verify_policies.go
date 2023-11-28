@@ -75,10 +75,11 @@ var cleanVerifyPoliciesCmd = &cobra.Command{
 }
 
 func init() {
+	l := logger.Get()
+
 	cleanVerifyPoliciesCmd.PersistentFlags().StringSliceVar(&verifyPolicyNames, verifyPolicyNamesParamName, verify.BootstrapVerifyPolicyNames, "The list of Verify policy names to search for to delete.  Case sensitive.")
 
-	// Do the binds
-	for k, v := range verifyPolicyConfigurationParamMapping {
-		viper.BindPFlag(v, cleanVerifyPoliciesCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(verifyPolicyConfigurationParamMapping, cleanVerifyPoliciesCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }

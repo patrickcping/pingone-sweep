@@ -76,11 +76,12 @@ var cleanKeysCmd = &cobra.Command{
 }
 
 func init() {
+	l := logger.Get()
+
 	cleanKeysCmd.PersistentFlags().StringArrayVar(&keyIssuerDNPrefixes, keysIssuerDNPrefixesParamName, platform.BootstrapKeyIssuerDNPrefixes, "The list of issuer DN prefixes to search for to delete.")
 	cleanKeysCmd.PersistentFlags().BoolVar(&keyCaseSensitive, keysCaseSensitiveParamName, false, "The issuer DN prefix search is case sensitive.")
 
-	// Do the binds
-	for k, v := range keysConfigurationParamMapping {
-		viper.BindPFlag(v, cleanKeysCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(keysConfigurationParamMapping, cleanKeysCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }

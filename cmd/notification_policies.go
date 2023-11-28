@@ -69,10 +69,11 @@ var cleanNotificationPoliciesCmd = &cobra.Command{
 }
 
 func init() {
+	l := logger.Get()
+
 	cleanNotificationPoliciesCmd.PersistentFlags().StringSliceVar(&notificationPolicyNames, notificationPolicyNamesParamName, platform.BootstrapNotificationPolicyNames, "The list of notification policy names to search for to delete.  Case sensitive.")
 
-	// Do the binds
-	for k, v := range notificationPolicyConfigurationParamMapping {
-		viper.BindPFlag(v, cleanNotificationPoliciesCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(notificationPolicyConfigurationParamMapping, cleanNotificationPoliciesCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }

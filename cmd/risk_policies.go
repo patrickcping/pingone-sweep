@@ -69,10 +69,11 @@ var cleanRiskPoliciesCmd = &cobra.Command{
 }
 
 func init() {
+	l := logger.Get()
+
 	cleanRiskPoliciesCmd.PersistentFlags().StringSliceVar(&riskPolicyNames, riskPolicyNamesParamName, protect.BootstrapRiskPolicyNames, "The list of Risk policy names to search for to delete.  Case sensitive.")
 
-	// Do the binds
-	for k, v := range riskPolicyConfigurationParamMapping {
-		viper.BindPFlag(v, cleanRiskPoliciesCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(riskPolicyConfigurationParamMapping, cleanRiskPoliciesCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }

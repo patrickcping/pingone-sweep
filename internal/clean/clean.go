@@ -110,7 +110,7 @@ func TryCleanConfig(ctx context.Context, configKey string, env CleanEnvironmentC
 		if configItemEval.CaseSensitive != nil && *configItemEval.CaseSensitive {
 			eqExprResult = configItem.IdentifierToEvaluate == identifierToSearch
 		} else {
-			eqExprResult = strings.ToLower(configItem.IdentifierToEvaluate) == strings.ToLower(identifierToSearch)
+			eqExprResult = strings.EqualFold(configItem.IdentifierToEvaluate, identifierToSearch)
 		}
 
 		if eqExprResult {

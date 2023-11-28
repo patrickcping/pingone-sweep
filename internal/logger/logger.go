@@ -16,7 +16,7 @@ func Get() zerolog.Logger {
 	once.Do(func() {
 
 		logLevelEnv := os.Getenv("P1_SWEEP_LOG")
-		logLevel := zerolog.Disabled
+		var logLevel zerolog.Level
 
 		switch logLevelEnv {
 		case "DEBUG":
@@ -56,7 +56,7 @@ func Get() zerolog.Logger {
 		}
 
 		logger = zerolog.New(output).
-			Level(zerolog.Level(logLevel)).
+			Level(logLevel).
 			With().
 			Timestamp().
 			Logger()

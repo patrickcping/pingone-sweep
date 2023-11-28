@@ -69,10 +69,11 @@ var cleanBrandingThemesCmd = &cobra.Command{
 }
 
 func init() {
+	l := logger.Get()
+
 	cleanBrandingThemesCmd.PersistentFlags().StringArrayVar(&themeNames, brandingThemeNamesParamName, platform.BootstrapBrandingThemeNames, "The list of theme names to search for to delete.")
 
-	// Do the binds
-	for k, v := range brandingThemesConfigurationParamMapping {
-		viper.BindPFlag(v, cleanBrandingThemesCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(brandingThemesConfigurationParamMapping, cleanBrandingThemesCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }

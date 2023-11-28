@@ -69,10 +69,11 @@ var cleanAuthenticationPoliciesCmd = &cobra.Command{
 }
 
 func init() {
+	l := logger.Get()
+
 	cleanAuthenticationPoliciesCmd.PersistentFlags().StringSliceVar(&authenticationPolicyNames, authenticationPolicyNamesParamName, sso.BootstrapAuthenticationPolicyNames, "The list of sign-on (authentication) policy names to search for to delete.  Case sensitive.")
 
-	// Do the binds
-	for k, v := range authenticationPolicyConfigurationParamMapping {
-		viper.BindPFlag(v, cleanAuthenticationPoliciesCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(authenticationPolicyConfigurationParamMapping, cleanAuthenticationPoliciesCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }

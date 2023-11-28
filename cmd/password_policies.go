@@ -69,10 +69,11 @@ var cleanPasswordPoliciesCmd = &cobra.Command{
 }
 
 func init() {
+	l := logger.Get()
+
 	cleanPasswordPoliciesCmd.PersistentFlags().StringSliceVar(&passwordPolicyNames, passwordPolicyNamesParamName, sso.BootstrapPasswordPolicyNames, "The list of password policy names to search for to delete.  Case sensitive.")
 
-	// Do the binds
-	for k, v := range passwordPolicyConfigurationParamMapping {
-		viper.BindPFlag(v, cleanPasswordPoliciesCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(passwordPolicyConfigurationParamMapping, cleanPasswordPoliciesCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }

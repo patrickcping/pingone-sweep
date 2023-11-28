@@ -69,10 +69,11 @@ var cleanMfaDevicePoliciesCmd = &cobra.Command{
 }
 
 func init() {
+	l := logger.Get()
+
 	cleanMfaDevicePoliciesCmd.PersistentFlags().StringSliceVar(&mfaDevicePolicyNames, mfaDevicePolicyNamesParamName, mfa.BootstrapMFADevicePolicyNames, "The list of MFA Device policy names to search for to delete.  Case sensitive.")
 
-	// Do the binds
-	for k, v := range mfaDevicePolicyConfigurationParamMapping {
-		viper.BindPFlag(v, cleanMfaDevicePoliciesCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(mfaDevicePolicyConfigurationParamMapping, cleanMfaDevicePoliciesCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }

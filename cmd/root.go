@@ -65,14 +65,19 @@ var rootCmd = &cobra.Command{
 	Use:   "pingone-sweep",
 	Short: "pingone-sweep is a CLI to clean demo bootstrap configuration from a PingOne environment.",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		err := initConfig(cmd)
+		l := logger.Get()
+
+		err := initConfig()
 		if err != nil {
 			return err
 		}
 
 		cmd.Flags().VisitAll(func(f *pflag.Flag) {
 			if v, ok := rootConfigurationParamMapping[f.Name]; ok && viper.IsSet(v) {
-				cmd.Flags().SetAnnotation(f.Name, cobra.BashCompOneRequiredFlag, []string{"false"})
+				if err = cmd.Flags().SetAnnotation(f.Name, cobra.BashCompOneRequiredFlag, []string{"false"}); err != nil {
+					l.Err(err).Msgf("Error setting required status for flag %s", f.Name)
+					return
+				}
 			}
 		})
 
@@ -115,6 +120,8 @@ func Execute() {
 }
 
 func init() {
+	l := logger.Get()
+
 	// General function commands
 	rootCmd.AddCommand(
 		cleanAuthenticationPoliciesCmd,
@@ -132,7 +139,9 @@ func init() {
 
 	// Add config flags
 	rootCmd.PersistentFlags().StringVarP(&region, regionParamName, "r", viper.GetString("PINGONE_REGION"), "The region code of the service (NA, EU, AP, CA).")
-	rootCmd.MarkPersistentFlagRequired(regionParamName)
+	if err := rootCmd.MarkPersistentFlagRequired(regionParamName); err != nil {
+		l.Err(err).Msgf("Error marking flag %s as required.", regionParamName)
+	}
 
 	// Worker token auth
 	rootCmd.PersistentFlags().StringVar(&workerEnvironmentId, workerEnvironmentIDParamName, viper.GetString("PINGONE_ENVIRONMENT_ID"), "The ID of the PingOne environment that contains the worker token client used to authenticate.")
@@ -143,18 +152,19 @@ func init() {
 
 	// Target environment
 	rootCmd.PersistentFlags().StringVar(&environmentID, environmentIDParamName, viper.GetString("PINGONE_TARGET_ENVIRONMENT_ID"), "The ID of the target environment to clean.")
-	rootCmd.MarkPersistentFlagRequired(environmentIDParamName)
+	if err := rootCmd.MarkPersistentFlagRequired(environmentIDParamName); err != nil {
+		l.Err(err).Msgf("Error marking flag %s as required.", environmentIDParamName)
+	}
 
 	// Dry run
 	rootCmd.PersistentFlags().BoolVar(&dryRun, dryRunParamName, false, "Run a clean routine but don't delete any configuration - instead issue a warning if configuration were to be deleted.")
 
-	// Do the binds
-	for k, v := range rootConfigurationParamMapping {
-		viper.BindPFlag(v, rootCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(rootConfigurationParamMapping, rootCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }
 
-func initConfig(cmd *cobra.Command) error {
+func initConfig() error {
 	l := logger.Get()
 
 	l.Debug().Msgf("Initialising configuration..")
@@ -198,4 +208,16 @@ func initApiClient(ctx context.Context, version string) (*sdk.Client, error) {
 
 	return apiConfig.APIClient(ctx, version)
 
+}
+
+func bindParams(paramlist map[string]string, command *cobra.Command) error {
+	// Do the binds
+	for k, v := range paramlist {
+		err := viper.BindPFlag(v, command.PersistentFlags().Lookup(k))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

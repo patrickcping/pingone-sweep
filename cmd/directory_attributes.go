@@ -71,10 +71,11 @@ var cleanDirectoryAttributesCmd = &cobra.Command{
 }
 
 func init() {
+	l := logger.Get()
+
 	cleanDirectoryAttributesCmd.PersistentFlags().StringSliceVar(&directoryAttributeNames, directoryAttributeNamesParamName, platform.BootstrapDirectoryAttributeNames, "The list of directory attribute names to search for to disable.")
 
-	// Do the binds
-	for k, v := range directoryAttributesConfigurationParamMapping {
-		viper.BindPFlag(v, cleanDirectoryAttributesCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(directoryAttributesConfigurationParamMapping, cleanDirectoryAttributesCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }

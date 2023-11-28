@@ -69,10 +69,11 @@ var cleanDaVinciFormsCmd = &cobra.Command{
 }
 
 func init() {
+	l := logger.Get()
+
 	cleanDaVinciFormsCmd.PersistentFlags().StringSliceVar(&daVinciFormNames, davinciFormNamesParamName, davinci.BootstrapDaVinciFormNames, "The list of DaVinci form names to search for to delete.  Case sensitive.")
 
-	// Do the binds
-	for k, v := range davinciFormsConfigurationParamMapping {
-		viper.BindPFlag(v, cleanDaVinciFormsCmd.PersistentFlags().Lookup(k))
+	if err := bindParams(davinciFormsConfigurationParamMapping, cleanDaVinciFormsCmd); err != nil {
+		l.Err(err).Msgf("Error binding parameters: %s", err)
 	}
 }
