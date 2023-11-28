@@ -3,14 +3,42 @@ dry-run: true
 pingone:
   services:
 
+    davinci:
+      forms:
+        names: []
+    
     mfa:
+      device-policies:
+        names: []
+
       fido2-policies:
         names: []
 
     platform:
+      branding-themes:
+        names: []
+
       directory-schema:
         attribute-names: []
 
+      keys:
+        case-sensitive: true
+        issuer-dn-prefixes: []
+
+      notification-policies:
+        names: []
+
     protect:
       risk-policies:
+        names: []
+    
+    sso:
+      authentication-policies:
+        names: []
+
+      password-policies:
+        names: []
+
+    verify:
+      policies:
         names: []
