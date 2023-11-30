@@ -1,3 +1,7 @@
+# This parameter file creates a blank starting point to configure sweep configuration.
+# The end result will be that no configuration is modified in an environment, even if `dry-run` is switched to false.
+# In order to sweep configuration, add parameter values to the desired services.
+
 dry-run: true
 
 pingone:

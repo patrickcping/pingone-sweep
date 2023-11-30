@@ -1,3 +1,7 @@
+# This parameter file represents the default configuration of the CLI, modelled on the default platform configuration bootstrap, where configuration is seeded automatically when an environment is created.
+# The end result will be that no configuration is modified in an environment until `dry-run` is switched to false.
+# If `dry-run` is turned off, the CLI will attempt to remove the listed configuration from an environment.
+
 dry-run: true
 
 pingone:
