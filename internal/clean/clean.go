@@ -31,6 +31,30 @@ type ConfigItemEval struct {
 	CaseSensitive          *bool
 }
 
+type CleanOutput struct {
+	ConfigItem     ConfigItem
+	ConfigItemEval ConfigItemEval
+	Action         CleanOutputAction
+	Result         CleanOutputResult
+	Message        *string
+}
+
+type CleanOutputResult string
+
+const (
+	ENUMCLEANOUTPUTRESULT_SUCCESS       CleanOutputResult = "Success"
+	ENUMCLEANOUTPUTRESULT_NOACTION_OK   CleanOutputResult = "No Action (OK)"
+	ENUMCLEANOUTPUTRESULT_NOACTION_WARN CleanOutputResult = "No Action (Warning)"
+	ENUMCLEANOUTPUTRESULT_FAILURE       CleanOutputResult = "Failure"
+)
+
+type CleanOutputAction string
+
+const (
+	ENUMCLEANOUTPUTACTION_DELETE  CleanOutputAction = "Delete"
+	ENUMCLEANOUTPUTRESULT_DISABLE CleanOutputAction = "Disable"
+)
+
 func BillOfMaterialsHasService(ctx context.Context, configKey string, env CleanEnvironmentConfig, productType management.EnumProductType) (bool, error) {
 	l := logger.Get()
 
@@ -92,14 +116,14 @@ func TryCleanConfig(ctx context.Context, configKey string, env CleanEnvironmentC
 		return fmt.Errorf("[%s] No SDK functions provided", configKey)
 	}
 
-	var debugAction string
+	var debugAction CleanOutputAction
 	var sdkActionFunc sdk.SDKInterfaceFunc
 	if deleteSdkFunction != nil {
-		debugAction = "DELETE"
+		debugAction = ENUMCLEANOUTPUTACTION_DELETE
 		sdkActionFunc = deleteSdkFunction
 	}
 	if disableSdkFunction != nil {
-		debugAction = "DISABLE"
+		debugAction = ENUMCLEANOUTPUTRESULT_DISABLE
 		sdkActionFunc = disableSdkFunction
 	}
 
@@ -117,13 +141,36 @@ func TryCleanConfig(ctx context.Context, configKey string, env CleanEnvironmentC
 			l.Debug().Msgf(`[%s] Found "%s"`, configKey, identifierToSearch)
 
 			if configItem.Default != nil && *configItem.Default {
-				l.Warn().Msgf(`[%s] "%s" is set as the environment default - no action will be taken`, configKey, configItem.IdentifierToEvaluate)
+
+				message := fmt.Sprintf(`"%s" is set as the environment default and cannot be removed`, configItem.IdentifierToEvaluate)
+				l.Warn().Msgf(`[%s] No action taken: %s`, configKey, message)
+
+				handleOutput(configKey, CleanOutput{
+					ConfigItem:     configItem,
+					ConfigItemEval: configItemEval,
+					Action:         debugAction,
+					Result:         ENUMCLEANOUTPUTRESULT_NOACTION_WARN,
+					Message:        &message,
+				},
+					env.DryRun,
+				)
 
 				break
 			}
 
 			if configItem.Enabled != nil && !*configItem.Enabled && disableSdkFunction != nil {
-				l.Info().Msgf(`[%s] "%s" is already disabled - no action taken`, configKey, configItem.IdentifierToEvaluate)
+				message := fmt.Sprintf(`"%s" is already disabled`, configItem.IdentifierToEvaluate)
+				l.Info().Msgf(`[%s] No action taken: %s`, configKey, message)
+
+				handleOutput(configKey, CleanOutput{
+					ConfigItem:     configItem,
+					ConfigItemEval: configItemEval,
+					Action:         debugAction,
+					Result:         ENUMCLEANOUTPUTRESULT_NOACTION_OK,
+					Message:        &message,
+				},
+					env.DryRun,
+				)
 
 				break
 			}
@@ -145,6 +192,15 @@ func TryCleanConfig(ctx context.Context, configKey string, env CleanEnvironmentC
 			} else {
 				l.Warn().Msgf(`[%s] Dry run: %s action "%s" with ID "%s"`, configKey, debugAction, configItem.IdentifierToEvaluate, configItem.Id)
 			}
+
+			handleOutput(configKey, CleanOutput{
+				ConfigItem:     configItem,
+				ConfigItemEval: configItemEval,
+				Action:         debugAction,
+				Result:         ENUMCLEANOUTPUTRESULT_SUCCESS,
+			},
+				env.DryRun,
+			)
 
 			break
 		}

@@ -31,6 +31,12 @@ const (
 	dryRunParamName      = "dry-run"
 	dryRunParamConfigKey = "dry-run"
 
+	outputJsonParamName      = "json"
+	outputJsonParamConfigKey = "output.json"
+
+	outputNoColorParamName      = "no-color"
+	outputNoColorParamConfigKey = "output.no-color"
+
 	workerEnvironmentIDParamName      = "worker-environment-id"
 	workerEnvironmentIDParamConfigKey = "pingone.worker-environment-id"
 
@@ -48,12 +54,16 @@ var (
 	workerClientSecret  string
 	environmentID       string
 	dryRun              bool
+	outputJson          bool
+	outputNoColor       bool
 	apiClient           *sdk.Client
 
 	rootConfigurationParamMapping = map[string]string{
 		regionParamName:              regionParamConfigKey,
 		environmentIDParamName:       environmentIDParamConfigKey,
 		dryRunParamName:              dryRunParamConfigKey,
+		outputJsonParamName:          outputJsonParamConfigKey,
+		outputNoColorParamName:       outputNoColorParamConfigKey,
 		workerEnvironmentIDParamName: workerEnvironmentIDParamConfigKey,
 		workerClientIDParamName:      workerClientIDParamConfigKey,
 		workerClientSecretParamName:  workerClientSecretParamConfigKey,
@@ -158,6 +168,12 @@ func init() {
 
 	// Dry run
 	rootCmd.PersistentFlags().BoolVar(&dryRun, dryRunParamName, false, "Run a clean routine but don't delete any configuration - instead issue a warning if configuration were to be deleted.")
+
+	// Output format
+	rootCmd.PersistentFlags().BoolVar(&outputJson, outputJsonParamName, false, "Output in JSON format.")
+
+	// Output color
+	rootCmd.PersistentFlags().BoolVar(&outputNoColor, outputNoColorParamName, false, "Output without color formatting.")
 
 	if err := bindParams(rootConfigurationParamMapping, rootCmd); err != nil {
 		l.Err(err).Msgf("Error binding parameters: %s", err)

@@ -68,9 +68,12 @@ var cleanVerifyPoliciesCmd = &cobra.Command{
 			BootstrapVerifyPolicyNames: verifyPolicyNames,
 		}
 
-		cmd.Printf("Tests!!")
+		//results := make([]clean.CleanOutput, 0)
+		if err := cleanConfig.Clean(cmd.Context()); err != nil {
+			return err
+		}
 
-		return cleanConfig.Clean(cmd.Context())
+		return nil
 	},
 }
 
