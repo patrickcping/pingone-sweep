@@ -12,5 +12,3 @@ func main() {
 
 	cmd.Execute()
 }
-
-func init() {}
